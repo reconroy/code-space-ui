@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Login = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
-  const [email, setEmail] = useState('');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -17,10 +17,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_URL}/api/login`, { email, password });
+      const response = await axios.post(`${API_URL}/api/login`, { emailOrUsername, password });
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
-        navigate('/dashboard'); // Redirect to dashboard after successful login
+        navigate('/dashboard');
       }
     } catch (error) {
       setError(error.response?.data?.message || 'An error occurred during login');
@@ -52,20 +52,20 @@ const Login = () => {
           </div>
         )}
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className={`mt-1 block w-full px-3 py-2 border ${isDarkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+        <div>
+        <label htmlFor="emailOrUsername" className="block text-sm font-medium">
+          Email or Username
+        </label>
+        <input
+          id="emailOrUsername"
+          name="emailOrUsername"
+          type="text"
+          required
+          className={`mt-1 block w-full px-3 py-2 border ${isDarkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+          value={emailOrUsername}
+          onChange={(e) => setEmailOrUsername(e.target.value)}
+        />
+      </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium">
               Password
