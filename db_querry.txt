@@ -10,34 +10,116 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    default_codespace_slug VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create the user_auth table
-CREATE TABLE IF NOT EXISTS user_auth (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    last_login TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Create the codespaces table
+-- Create the codespaces table with enhanced privacy controls
 CREATE TABLE IF NOT EXISTS codespaces (
     id INT AUTO_INCREMENT PRIMARY KEY,
     slug VARCHAR(50) NOT NULL UNIQUE,
     owner_id INT,
     content TEXT,
-    language VARCHAR(50),
+    language VARCHAR(50) DEFAULT 'javascript',
     is_public BOOLEAN DEFAULT FALSE,
+    is_default BOOLEAN DEFAULT FALSE,
+    access_type ENUM('private', 'public', 'shared') DEFAULT 'private',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+-- Create shared access table for future collaboration features
+CREATE TABLE IF NOT EXISTS codespace_access (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    codespace_id INT NOT NULL,
+    user_id INT NOT NULL,
+    access_level ENUM('read', 'write', 'admin') DEFAULT 'read',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (codespace_id) REFERENCES codespaces(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_access (codespace_id, user_id)
+);
+
 -- Add indexes for better query performance
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_default_codespace ON users(default_codespace_slug);
 CREATE INDEX idx_codespaces_slug ON codespaces(slug);
 CREATE INDEX idx_codespaces_owner ON codespaces(owner_id);
+CREATE INDEX idx_codespaces_access_type ON codespaces(access_type);
+CREATE INDEX idx_codespaces_is_default ON codespaces(is_default);
+
+-- Add triggers to maintain data consistency
+DELIMITER //
+
+-- Trigger to update user's default_codespace_slug when their default codespace is created
+CREATE TRIGGER after_codespace_insert
+AFTER INSERT ON codespaces
+FOR EACH ROW
+BEGIN
+    IF NEW.is_default = TRUE THEN
+        UPDATE users 
+        SET default_codespace_slug = NEW.slug 
+        WHERE id = NEW.owner_id;
+    END IF;
+END//
+
+-- Trigger to ensure only one default codespace per user
+CREATE TRIGGER before_codespace_update
+BEFORE UPDATE ON codespaces
+FOR EACH ROW
+BEGIN
+    IF NEW.is_default = TRUE AND OLD.is_default = FALSE THEN
+        UPDATE codespaces 
+        SET is_default = FALSE 
+        WHERE owner_id = NEW.owner_id 
+        AND id != NEW.id;
+    END IF;
+END//
+
+DELIMITER ;
+
+-- Add procedure to create default codespace for user
+DELIMITER //
+
+CREATE PROCEDURE create_default_codespace(
+    IN p_username VARCHAR(50),
+    IN p_user_id INT
+)
+BEGIN
+    DECLARE default_content TEXT;
+    SET default_content = CONCAT(
+        '// Welcome to your private CodeSpace, ', p_username, '!\n',
+        '// This is your personal workspace where you can:\n',
+        '// - Write and test code\n',
+        '// - Save your snippets\n',
+        '// - Work on your projects\n\n',
+        'function greeting() {\n',
+        '    console.log("Happy coding! 🚀");\n',
+        '}\n\n',
+        'greeting();'
+    );
+    
+    INSERT INTO codespaces (
+        slug,
+        owner_id,
+        content,
+        language,
+        is_public,
+        is_default,
+        access_type
+    ) VALUES (
+        p_username,
+        p_user_id,
+        default_content,
+        'javascript',
+        FALSE,
+        TRUE,
+        'private'
+    );
+END//
+
+DELIMITER ;
+

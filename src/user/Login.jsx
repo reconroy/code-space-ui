@@ -12,19 +12,38 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+  
     try {
-      const response = await axios.post(`${API_URL}/api/login`, { emailOrUsername, password });
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        navigate('/dashboard');
+      const loginResponse = await axios.post(`${API_URL}/api/login`, { 
+        emailOrUsername, 
+        password 
+      });
+  
+      if (loginResponse.data.status === 'success' && loginResponse.data.token) {
+        // Only store the token
+        localStorage.setItem('token', loginResponse.data.token);
+        
+        // Get username from login response and use it for navigation
+        const username = loginResponse.data.username;
+        
+        // Navigate directly to user's personal codespace
+        navigate(`/${username}`);
       }
     } catch (error) {
-      setError(error.response?.data?.message || 'An error occurred during login');
       console.error('Login error:', error);
+      setError(
+        error.response?.data?.message || 
+        'Invalid email/username or password'
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -52,20 +71,20 @@ const Login = () => {
           </div>
         )}
         <form className="space-y-6" onSubmit={handleSubmit}>
-        <div>
-        <label htmlFor="emailOrUsername" className="block text-sm font-medium">
-          Email or Username
-        </label>
-        <input
-          id="emailOrUsername"
-          name="emailOrUsername"
-          type="text"
-          required
-          className={`mt-1 block w-full px-3 py-2 border ${isDarkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-          value={emailOrUsername}
-          onChange={(e) => setEmailOrUsername(e.target.value)}
-        />
-      </div>
+          <div>
+            <label htmlFor="emailOrUsername" className="block text-sm font-medium">
+              Email or Username
+            </label>
+            <input
+              id="emailOrUsername"
+              name="emailOrUsername"
+              type="text"
+              required
+              className={`mt-1 block w-full px-3 py-2 border ${isDarkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+              value={emailOrUsername}
+              onChange={(e) => setEmailOrUsername(e.target.value)}
+            />
+          </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium">
               Password
@@ -96,12 +115,13 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-300 hover:scale-105 relative overflow-hidden"
+              disabled={isLoading}
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white ${isLoading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-300 hover:scale-105 relative overflow-hidden`}
               style={{ 
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
               }}
             >
-              <span className="relative z-10">Sign In</span>
+              <span className="relative z-10">{isLoading ? 'Signing in...' : 'Sign In'}</span>
               <div 
                 className="absolute inset-0" 
                 style={{
