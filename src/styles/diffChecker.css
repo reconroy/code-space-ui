@@ -1,0 +1,19 @@
+.diff-line-deleted {
+  background-color: rgba(255, 0, 0, 0.2);
+}
+
+.diff-line-added {
+  background-color: rgba(0, 255, 0, 0.2);
+}
+
+.diff-line-deleted-gutter {
+  background-color: rgba(255, 0, 0, 0.5);
+  width: 5px !important;
+  margin-left: 3px;
+}
+
+.diff-line-added-gutter {
+  background-color: rgba(0, 255, 0, 0.5);
+  width: 5px !important;
+  margin-left: 3px;
+}

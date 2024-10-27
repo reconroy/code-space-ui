@@ -1,0 +1,27 @@
+react-tailwind-node
+|
+|
+|-/vite
+|-backend
+|     |--/config
+|     |--/controllers
+|     |--/models
+|     |--/routes
+|     |--server.js
+|
+|-frontend
+     |--/node_modules
+     |--/public
+     |--/src
+     |--.env
+     |--.gitignore
+     |--db_querry.txt
+     |--eslint.config.js
+     |--package-lock.kson
+     |--package.json
+     |--postcss.config.cjs
+     |--README.md
+     |--run@local.txt
+     |--tailwind.config.js
+     |--vite.config.js
+
