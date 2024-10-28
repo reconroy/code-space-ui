@@ -5,6 +5,7 @@ import { io } from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import MenuPanel from './../components/MenuPanel';
 import useThemeStore from '../store/useThemeStore';
+import UnauthorizedModal from '../components/UnauthorizedModal';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -56,6 +57,26 @@ const CodespacePage = () => {
   const [accessDenied, setAccessDenied] = useState(false);
   const [owner, setOwner] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
+
+  useEffect(() => {
+    const checkToken = () => {
+      const token = localStorage.getItem('token');
+      if (!token && isAuthenticated) {
+        setShowUnauthorizedModal(true);
+        setIsAuthenticated(false);
+      }
+    };
+
+    // Check immediately
+    checkToken();
+
+    // Set up interval to check periodically
+    const intervalId = setInterval(checkToken, 1000);
+
+    // Clean up
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated]);
 
   const verifyToken = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -80,15 +101,15 @@ const CodespacePage = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
       const response = await axios.get(`/api/codespace/${slug}`, { headers });
-      
+
       if (response.data.status === 'fail') {
         setAccessDenied(true);
         setOwner(response.data.owner);
         return;
       }
-      
+
       setCode(response.data.content || '');
       setLanguage(response.data.language || 'javascript');
       setError(null);
@@ -110,8 +131,8 @@ const CodespacePage = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      const response = await axios.post('/api/codespace', 
+
+      const response = await axios.post('/api/codespace',
         { slug: newSlug || slug },
         { headers }
       );
@@ -201,12 +222,12 @@ const CodespacePage = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      await axios.put(`/api/codespace/${slug}`, 
+
+      await axios.put(`/api/codespace/${slug}`,
         { content: codeToSave, language: langToSave },
         { headers }
       );
-      
+
       if (socket?.connected) {
         socket.emit('codeChange', { slug, content: codeToSave });
       }
@@ -239,9 +260,9 @@ const CodespacePage = () => {
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
     </div>
   );
-  
+
   if (accessDenied) return <AccessDenied owner={owner} isDarkMode={isDarkMode} />;
-  
+
   if (error) return (
     <div className={`flex-grow flex items-center justify-center ${isDarkMode ? 'bg-gray-900 text-red-400' : 'bg-gray-50 text-red-600'}`}>
       {error}
@@ -249,30 +270,33 @@ const CodespacePage = () => {
   );
 
   return (
-    <div className={`flex-grow flex ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-      <div className={`relative ${isAuthenticated ? 'flex-grow' : 'w-full'}`}>
-        <CodeEditor 
-          code={code} 
-          setCode={handleCodeChange}
-          language={language}
-          setLanguage={handleLanguageChange}
-          socket={socket}
-          slug={slug}
-          minimapEnabled={minimapEnabled}
-        />
-      </div>
-      {isAuthenticated && (
-        <div className="flex-shrink-0">
-          <MenuPanel 
+    <>
+      <div className={`flex-grow flex ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className={`relative ${isAuthenticated ? 'flex-grow' : 'w-full'}`}>
+          <CodeEditor
             code={code}
+            setCode={handleCodeChange}
             language={language}
-            onLanguageChange={handleLanguageChange}
-            onToggleMinimap={handleToggleMinimap}
-            createCodespace={createCodespace}
+            setLanguage={handleLanguageChange}
+            socket={socket}
+            slug={slug}
+            minimapEnabled={minimapEnabled}
           />
         </div>
-      )}
-    </div>
+        {isAuthenticated && (
+          <div className="flex-shrink-0">
+            <MenuPanel
+              code={code}
+              language={language}
+              onLanguageChange={handleLanguageChange}
+              onToggleMinimap={handleToggleMinimap}
+              createCodespace={createCodespace}
+            />
+          </div>
+        )}
+      </div>
+      <UnauthorizedModal isOpen={showUnauthorizedModal} />
+    </>
   );
 };
 
