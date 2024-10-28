@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useThemeStore from '../store/useThemeStore';
+import axios from 'axios';
 
 const logoutMessages = [
   {
@@ -54,12 +55,43 @@ const LogoutModal = ({ isOpen, onClose }) => {
     return logoutMessages[randomIndex];
   }, [isOpen]); // Regenerate only when modal opens
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/');
-    onClose();
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Token being sent:', token); // Debug log
+  
+      if (!token) {
+        console.log('No token found in localStorage');
+        navigate('/');
+        onClose();
+        return;
+      }
+  
+      // Make sure the API call is happening
+      const response = await axios.post('/api/auth/logout', {}, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      console.log('Logout response:', response.data); // Debug log
+  
+      if (response.data.status === 'success') {
+        localStorage.removeItem('token');
+        navigate('/');
+        onClose();
+      } else {
+        console.error('Logout failed:', response.data);
+      }
+    } catch (error) {
+      console.error('Logout error:', error.response?.data || error);
+      // Still logout locally if API fails
+      localStorage.removeItem('token');
+      navigate('/');
+      onClose();
+    }
   };
-
   if (!isOpen) return null;
 
   return (
