@@ -55,43 +55,111 @@ const CodespacePage = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const [accessDenied, setAccessDenied] = useState(false);
   const [owner, setOwner] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const verifyToken = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsAuthenticated(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get('/api/auth/verify', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIsAuthenticated(response.data.valid);
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      setIsAuthenticated(false);
+      localStorage.removeItem('token');
+    }
+  }, []);
+
+  const fetchCodespace = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`/api/codespace/${slug}`, { headers });
+      
+      if (response.data.status === 'fail') {
+        setAccessDenied(true);
+        setOwner(response.data.owner);
+        return;
+      }
+      
+      setCode(response.data.content || '');
+      setLanguage(response.data.language || 'javascript');
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching codespace:', error);
+      if (error.response?.status === 403) {
+        setAccessDenied(true);
+        setOwner(error.response.data.owner);
+      } else {
+        setError('Failed to fetch codespace. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [slug]);
 
   const createCodespace = async (newSlug) => {
+    setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       const response = await axios.post('/api/codespace', 
-        { slug: newSlug },
+        { slug: newSlug || slug },
         { headers }
       );
 
       if (response.data.status === 'success') {
-        navigate(`/${newSlug}`);
+        if (newSlug) {
+          navigate(`/${newSlug}`);
+        } else {
+          await fetchCodespace();
+        }
+        return true;
       }
+      return false;
     } catch (error) {
       console.error('Error creating codespace:', error);
       setError(error.response?.data?.message || 'Failed to create codespace');
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (slug) {
-      // Check if codespace exists
-      axios.get(`/api/codespace/${slug}`)
-        .then(() => {
-          // Codespace exists, continue with normal flow
-          fetchCodespace();
-        })
-        .catch(error => {
-          if (error.response?.status === 404) {
-            // Codespace doesn't exist, create it
-            createCodespace(slug);
-          } else {
-            setError('Failed to check codespace existence');
-          }
-        });
-    }
+    verifyToken();
+  }, [verifyToken]);
+
+  useEffect(() => {
+    const initializeCodespace = async () => {
+      if (!slug) return;
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await axios.get(`/api/codespace/${slug}`);
+        if (response.data) {
+          await fetchCodespace();
+        }
+      } catch (error) {
+        if (error.response?.status === 404) {
+          await createCodespace();
+        } else {
+          setError('Failed to initialize codespace');
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeCodespace();
   }, [slug]);
 
   useEffect(() => {
@@ -118,61 +186,29 @@ const CodespacePage = () => {
     });
 
     newSocket.on('roomJoined', () => fetchCodespace());
-
-    newSocket.on('roomError', () => {
-      setError('Failed to join the room. Please try again.');
-      setIsLoading(false);
-    });
-
     newSocket.on('codeUpdate', setCode);
 
     return () => {
       newSocket.off('connect');
       newSocket.off('connect_error');
       newSocket.off('roomJoined');
-      newSocket.off('roomError');
       newSocket.off('codeUpdate');
       newSocket.close();
     };
-  }, [slug]);
+  }, [slug, fetchCodespace]);
 
-  const fetchCodespace = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const saveCode = useCallback(async (codeToSave, langToSave) => {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
-      const response = await axios.get(`/api/codespace/${slug}`, { headers });
+      await axios.put(`/api/codespace/${slug}`, 
+        { content: codeToSave, language: langToSave },
+        { headers }
+      );
       
-      if (response.data.status === 'fail') {
-        setAccessDenied(true);
-        setOwner(response.data.owner);
-        return;
-      }
-      
-      setCode(response.data.content || '');
-      setLanguage(response.data.language || 'javascript');
-    } catch (error) {
-      console.error('Error fetching codespace:', error);
-      if (error.response?.status === 403) {
-        setAccessDenied(true);
-        setOwner(error.response.data.owner);
-      } else {
-        setError('Failed to fetch codespace. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [slug]);
-
-  const saveCode = useCallback(async (codeToSave, langToSave) => {
-    try {
-      await axios.put(`/api/codespace/${slug}`, { content: codeToSave, language: langToSave });
       if (socket?.connected) {
         socket.emit('codeChange', { slug, content: codeToSave });
-      } else {
-        console.error('Socket is not connected. Unable to emit codeChange event.');
       }
     } catch (error) {
       console.error('Error saving code:', error);
@@ -214,7 +250,7 @@ const CodespacePage = () => {
 
   return (
     <div className={`flex-grow flex ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-      <div className="flex-grow relative">
+      <div className={`relative ${isAuthenticated ? 'flex-grow' : 'w-full'}`}>
         <CodeEditor 
           code={code} 
           setCode={handleCodeChange}
@@ -225,15 +261,17 @@ const CodespacePage = () => {
           minimapEnabled={minimapEnabled}
         />
       </div>
-      <div className="flex-shrink-0">
-        <MenuPanel 
-          code={code}
-          language={language}
-          onLanguageChange={handleLanguageChange}
-          onToggleMinimap={handleToggleMinimap}
-          createCodespace={createCodespace}
-        />
-      </div>
+      {isAuthenticated && (
+        <div className="flex-shrink-0">
+          <MenuPanel 
+            code={code}
+            language={language}
+            onLanguageChange={handleLanguageChange}
+            onToggleMinimap={handleToggleMinimap}
+            createCodespace={createCodespace}
+          />
+        </div>
+      )}
     </div>
   );
 };
