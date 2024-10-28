@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import CodeEditor from './CodeEditor';
@@ -13,6 +13,7 @@ const debounce = (func, delay) => {
     timeoutId = setTimeout(() => func(...args), delay);
   };
 };
+
 const AccessDenied = ({ owner, isDarkMode }) => (
   <div className={`flex-grow flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
     <div className={`max-w-md w-full mx-auto p-8 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-lg shadow-lg text-center`}>
@@ -41,8 +42,10 @@ const AccessDenied = ({ owner, isDarkMode }) => (
     </div>
   </div>
 );
+
 const CodespacePage = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
   const [isLoading, setIsLoading] = useState(true);
@@ -52,6 +55,44 @@ const CodespacePage = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const [accessDenied, setAccessDenied] = useState(false);
   const [owner, setOwner] = useState(null);
+
+  const createCodespace = async (newSlug) => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.post('/api/codespace', 
+        { slug: newSlug },
+        { headers }
+      );
+
+      if (response.data.status === 'success') {
+        navigate(`/${newSlug}`);
+      }
+    } catch (error) {
+      console.error('Error creating codespace:', error);
+      setError(error.response?.data?.message || 'Failed to create codespace');
+    }
+  };
+
+  useEffect(() => {
+    if (slug) {
+      // Check if codespace exists
+      axios.get(`/api/codespace/${slug}`)
+        .then(() => {
+          // Codespace exists, continue with normal flow
+          fetchCodespace();
+        })
+        .catch(error => {
+          if (error.response?.status === 404) {
+            // Codespace doesn't exist, create it
+            createCodespace(slug);
+          } else {
+            setError('Failed to check codespace existence');
+          }
+        });
+    }
+  }, [slug]);
 
   useEffect(() => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -102,9 +143,16 @@ const CodespacePage = () => {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
-      const { data } = await axios.get(`/api/codespace/${slug}`, { headers });
-      setCode(data.content || '');
-      setLanguage(data.language || 'javascript');
+      const response = await axios.get(`/api/codespace/${slug}`, { headers });
+      
+      if (response.data.status === 'fail') {
+        setAccessDenied(true);
+        setOwner(response.data.owner);
+        return;
+      }
+      
+      setCode(response.data.content || '');
+      setLanguage(response.data.language || 'javascript');
     } catch (error) {
       console.error('Error fetching codespace:', error);
       if (error.response?.status === 403) {
@@ -163,6 +211,7 @@ const CodespacePage = () => {
       {error}
     </div>
   );
+
   return (
     <div className={`flex-grow flex ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       <div className="flex-grow relative">
@@ -182,6 +231,7 @@ const CodespacePage = () => {
           language={language}
           onLanguageChange={handleLanguageChange}
           onToggleMinimap={handleToggleMinimap}
+          createCodespace={createCodespace}
         />
       </div>
     </div>
