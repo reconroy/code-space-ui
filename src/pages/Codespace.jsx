@@ -58,42 +58,55 @@ const CodespacePage = () => {
   const [owner, setOwner] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
+  const [isTokenValid, setIsTokenValid] = useState(false);
+  const [isPrivateCodespace, setIsPrivateCodespace] = useState(false);
 
+  // Replace the problematic useEffect
   useEffect(() => {
     const checkToken = () => {
       const token = localStorage.getItem('token');
-      if (!token && isAuthenticated) {
-        setShowUnauthorizedModal(true);
+      if (token) {
+        setIsAuthenticated(true);
+        setIsTokenValid(true);
+      } else {
+        setIsTokenValid(false);
         setIsAuthenticated(false);
+        // Only show modal for private codespaces
+        if (isPrivateCodespace) {
+          setShowUnauthorizedModal(true);
+        }
       }
     };
-
-    // Check immediately
+  
     checkToken();
+  }, [isPrivateCodespace]); 
 
-    // Set up interval to check periodically
-    const intervalId = setInterval(checkToken, 1000);
-
-    // Clean up
-    return () => clearInterval(intervalId);
-  }, [isAuthenticated]);
-
+  // Add this function to verify token
   const verifyToken = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setIsAuthenticated(false);
-      return;
+      setIsTokenValid(false);
+      setShowUnauthorizedModal(true);
+      return false;
     }
 
     try {
       const response = await axios.get('/api/auth/verify', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setIsAuthenticated(response.data.valid);
+
+      setIsTokenValid(response.data.valid);
+      if (!response.data.valid) {
+        setShowUnauthorizedModal(true);
+        localStorage.removeItem('token');
+      }
+      return response.data.valid;
     } catch (error) {
       console.error('Token verification failed:', error);
-      setIsAuthenticated(false);
+      setIsTokenValid(false);
+      setShowUnauthorizedModal(true);
       localStorage.removeItem('token');
+      return false;
     }
   }, []);
 
@@ -101,15 +114,23 @@ const CodespacePage = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
+  
       const response = await axios.get(`/api/codespace/${slug}`, { headers });
-
-      if (response.data.status === 'fail') {
-        setAccessDenied(true);
-        setOwner(response.data.owner);
-        return;
+      
+      // Set isPrivate status first
+      setIsPrivateCodespace(response.data.isPrivate);
+  
+      // For private codespaces, verify token immediately
+      if (response.data.isPrivate) {
+        if (!token) {
+          setAccessDenied(true);
+          setOwner(response.data.owner_username);
+          setShowUnauthorizedModal(true);
+          return;
+        }
       }
-
+  
+      // If we get here, it's either public or we have valid token for private
       setCode(response.data.content || '');
       setLanguage(response.data.language || 'javascript');
       setError(null);
@@ -118,8 +139,9 @@ const CodespacePage = () => {
       if (error.response?.status === 403) {
         setAccessDenied(true);
         setOwner(error.response.data.owner);
+        setShowUnauthorizedModal(true);
       } else {
-        setError('Failed to fetch codespace. Please try again.');
+        setError('Failed to fetch codespace');
       }
     } finally {
       setIsLoading(false);
@@ -155,9 +177,7 @@ const CodespacePage = () => {
     }
   };
 
-  useEffect(() => {
-    verifyToken();
-  }, [verifyToken]);
+
 
   useEffect(() => {
     const initializeCodespace = async () => {
@@ -222,19 +242,28 @@ const CodespacePage = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
+  
+      // Only check token for private codespaces
+      if (isPrivateCodespace && !token) {
+        setShowUnauthorizedModal(true);
+        return;
+      }
+  
       await axios.put(`/api/codespace/${slug}`,
         { content: codeToSave, language: langToSave },
         { headers }
       );
-
+  
       if (socket?.connected) {
         socket.emit('codeChange', { slug, content: codeToSave });
       }
     } catch (error) {
       console.error('Error saving code:', error);
+      if (error.response?.status === 401 && isPrivateCodespace) {
+        setShowUnauthorizedModal(true);
+      }
     }
-  }, [slug, socket]);
+  }, [slug, socket, isPrivateCodespace]);
 
   const debouncedSave = useCallback(
     debounce((codeToSave, langToSave) => saveCode(codeToSave, langToSave), 1000),
@@ -242,6 +271,12 @@ const CodespacePage = () => {
   );
 
   const handleCodeChange = (newCode) => {
+    // Only check token for private codespaces
+    if (isPrivateCodespace && !localStorage.getItem('token')) {
+      setShowUnauthorizedModal(true);
+      return;
+    }
+    
     setCode(newCode);
     debouncedSave(newCode, language);
   };
@@ -281,6 +316,7 @@ const CodespacePage = () => {
             socket={socket}
             slug={slug}
             minimapEnabled={minimapEnabled}
+            readOnly={isPrivateCodespace && !localStorage.getItem('token')} // Only readonly for private spaces without token
           />
         </div>
         {isAuthenticated && (
@@ -295,7 +331,15 @@ const CodespacePage = () => {
           </div>
         )}
       </div>
-      <UnauthorizedModal isOpen={showUnauthorizedModal} />
+      <UnauthorizedModal
+        isOpen={showUnauthorizedModal}
+        onClose={() => {
+          setShowUnauthorizedModal(false);
+          if (!localStorage.getItem('token')) {
+            navigate('/');
+          }
+        }}
+      />
     </>
   );
 };
