@@ -6,7 +6,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useTypingEffect from '../animations/useTypingEffect';
 import debounce from 'lodash/debounce';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL ;
 
 const Registration = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
@@ -22,6 +22,7 @@ const Registration = () => {
   const [otpVerified, setOtpVerified] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendEnabled, setResendEnabled] = useState(false);
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
   const navigate = useNavigate();
 
   const phrases = [
@@ -96,6 +97,8 @@ const Registration = () => {
       setError('Please enter a valid and available email address');
       return;
     }
+    
+    setIsSendingOTP(true);
     try {
       await axios.post(`${API_URL}/api/send-otp`, { email });
       setOtpSent(true);
@@ -103,6 +106,8 @@ const Registration = () => {
       startResendCooldown();
     } catch (error) {
       setError('Failed to send OTP. Please try again.');
+    } finally {
+      setIsSendingOTP(false);
     }
   };
   const handleResendOTP = () => {
@@ -273,14 +278,22 @@ const Registration = () => {
               </p>
             )}
           </div>
-          {emailAvailable && !otpVerified && (
+          {emailAvailable && !otpVerified && !otpSent && (
             <div>
               <button
                 type="button"
                 onClick={handleSendOTP}
+                disabled={isSendingOTP}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                Send OTP
+                {isSendingOTP ? (
+                  <div className="flex items-center">
+                    <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                    Sending OTP...
+                  </div>
+                ) : (
+                  'Send OTP'
+                )}
               </button>
             </div>
           )}

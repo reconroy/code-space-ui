@@ -3,14 +3,16 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import useThemeStore from '../store/useThemeStore';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import debounce from 'lodash/debounce';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ForgotPassword = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const navigate = useNavigate();
   
   const [email, setEmail] = useState('');
+  const [emailExists, setEmailExists] = useState(null);
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
@@ -37,18 +39,49 @@ const ForgotPassword = () => {
     }, 1000);
   }, []);
 
+  const checkEmail = useCallback(
+    debounce(async (email) => {
+      if (!email || !/\S+@\S+\.\S+/.test(email)) {
+        setEmailExists(null);
+        return;
+      }
+      try {
+        const response = await axios.get(`${API_URL}/api/auth/check-email-exists/${email}`);
+        setEmailExists(response.data.exists);
+      } catch (error) {
+        console.error('Error checking email:', error);
+        setEmailExists(null);
+      }
+    }, 300),
+    []
+  );
+
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    checkEmail(newEmail);
+  };
+
   const handleSendOTP = async () => {
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
     try {
-      await axios.post(`${API_URL}/api/send-otp`, { email });
-      setOtpSent(true);
       setError('');
+      
+      if (!email || !/\S+@\S+\.\S+/.test(email)) {
+        setError('Please enter a valid email address');
+        return;
+      }
+
+      if (!emailExists) {
+        setError('Email not found in our records');
+        return;
+      }
+
+      await axios.post(`${API_URL}/api/auth/send-otp`, { email });
+      setOtpSent(true);
       startResendCooldown();
     } catch (error) {
-      setError('Failed to send OTP. Please try again.');
+      console.error('Error sending OTP:', error);
+      setError(error.response?.data?.message || 'Failed to send OTP. Please try again.');
     }
   };
 
@@ -60,86 +93,124 @@ const ForgotPassword = () => {
 
   const handleVerifyOTP = async () => {
     try {
-      const response = await axios.post(`${API_URL}/api/verify-otp`, { email, otp });
-      setOtpVerified(true);
       setError('');
+      
+      if (!otp) {
+        setError('Please enter the OTP');
+        return;
+      }
+
+      const response = await axios.post(`${API_URL}/api/auth/verify-otp`, { 
+        email, 
+        otp 
+      });
+
+      if (response.data.message === 'OTP verified successfully') {
+        setOtpVerified(true);
+      }
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to verify OTP. Please try again.');
+      console.error('Error verifying OTP:', error);
+      setError(error.response?.data?.message || 'Invalid OTP. Please try again.');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-
     try {
-      await axios.post(`${API_URL}/api/reset-password`, {
+      setError('');
+
+      if (!otpVerified) {
+        setError('Please verify your email with OTP first');
+        return;
+      }
+
+      if (!newPassword) {
+        setError('Please enter a new password');
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        setError('Password must be at least 8 characters long');
+        return;
+      }
+
+      const response = await axios.post(`${API_URL}/api/auth/reset-password`, {
         email,
         newPassword
       });
-      navigate('/login');
+
+      if (response.data.status === 'success') {
+        alert('Password reset successful!');
+        navigate('/login');
+      }
     } catch (error) {
+      console.error('Error resetting password:', error);
       setError(error.response?.data?.message || 'Failed to reset password. Please try again.');
     }
   };
 
   return (
-    <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-white border border-gray-200'}`}>
-      <div
-        className={`w-full max-w-md p-8 space-y-6 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800 border border-gray-200'} rounded-lg transform transition-all duration-300 hover:scale-105`}
-        style={{
-          boxShadow: isDarkMode
-            ? '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4), inset 0 -5px 10px -5px rgba(255, 255, 255, 0.1)'
-            : '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1), inset 0 -5px 10px -5px rgba(0, 0, 0, 0.05)',
-          transform: 'translateY(-10px)'
-        }}
-      >
+    <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`max-w-md w-full space-y-8 p-8 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <h2 className="text-2xl font-bold text-center mb-4">
           Reset Password
         </h2>
 
         {error && (
-          <div className={`${isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'} border border-red-400 px-4 py-3 rounded relative`} role="alert">
-            <span className="block sm:inline">{error}</span>
+          <div className="text-red-600 text-sm mt-2">
+            {error}
           </div>
         )}
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
               Email
             </label>
             <input
-              id="email"
               type="email"
-              required
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-              className={`mt-1 block w-full px-3 py-2 border ${isDarkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+              id="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               disabled={otpVerified}
+              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
             />
+            {email && /\S+@\S+\.\S+/.test(email) && (
+              <div className="mt-1">
+                {emailExists === false && (
+                  <p className="text-red-600 text-sm">
+                    This email is not registered. Please check your email or register.
+                  </p>
+                )}
+                {emailExists === true && (
+                  <p className="text-green-600 text-sm flex items-center">
+                    <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Email found
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
-          {!otpSent && (
+          {!otpVerified && (
             <button
               type="button"
               onClick={handleSendOTP}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={!emailExists || otpSent}
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                ${emailExists && !otpSent 
+                  ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500' 
+                  : 'bg-gray-400 cursor-not-allowed'
+                } transition-colors duration-200`}
             >
-              Send OTP
+              {otpSent ? 'OTP Sent' : 'Send OTP'}
             </button>
           )}
 
@@ -192,29 +263,28 @@ const ForgotPassword = () => {
           {otpVerified && (
             <>
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium">
+                <label className="block text-sm font-medium">
                   New Password
                 </label>
-                <div className="relative">
+                <div className="mt-1 relative">
                   <input
-                    id="newPassword"
                     type={showPassword ? "text" : "password"}
-                    required
-                    autoComplete="new-password"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    autoFocus="off"
-                    className={`mt-1 block w-full px-3 py-2 border ${isDarkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
+                    className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                    placeholder="Enter new password"
+                    minLength="8"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   >
-                    {showPassword ? <FaEye /> : <FaEyeSlash />}
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
               </div>
