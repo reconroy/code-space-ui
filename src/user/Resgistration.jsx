@@ -166,9 +166,12 @@ const Registration = () => {
 
       console.log('Registration successful', response.data);
 
+      // Store token and username
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('username', response.data.data.user.username);
 
-      navigate('/');
+      // Navigate directly to user's default codespace
+      navigate(`/${username}`);
     } catch (error) {
       console.error('Registration failed', error.response?.data || error.message);
       setError(error.response?.data?.message || 'Registration failed. Please try again.');
