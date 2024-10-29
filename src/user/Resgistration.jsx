@@ -166,9 +166,12 @@ const Registration = () => {
 
       console.log('Registration successful', response.data);
 
+      // Store token and username
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('username', response.data.data.user.username);
 
-      navigate('/');
+      // Navigate directly to user's default codespace
+      navigate(`/${username}`);
     } catch (error) {
       console.error('Registration failed', error.response?.data || error.message);
       setError(error.response?.data?.message || 'Registration failed. Please try again.');
@@ -177,6 +180,20 @@ const Registration = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleEmailKeyPress = async (e) => {
+    if (e.key === 'Enter' && !otpSent) {
+      e.preventDefault(); // Prevent form submission
+      if (username && 
+          email && 
+          usernameAvailable && 
+          emailAvailable && 
+          username.length >= 3 && 
+          /\S+@\S+\.\S+/.test(email)) {
+        await handleSendOTP();
+      }
+    }
   };
 
   return (
@@ -273,6 +290,7 @@ const Registration = () => {
                   const noSpaces = e.target.value.replace(/\s/g, '');
                   handleEmailChange({ ...e, target: { ...e.target, value: noSpaces } });
                 }}
+                onKeyPress={handleEmailKeyPress}
                 disabled={otpSent}
               />
               {email && /\S+@\S+\.\S+/.test(email) && (
