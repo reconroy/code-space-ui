@@ -3,12 +3,44 @@ import { FaBars, FaMoon, FaSun } from 'react-icons/fa';
 import Sidebar from './Sidebar';
 import useThemeStore from '.././store/useThemeStore';
 import { Link, useLocation } from 'react-router-dom';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Navbar = () => {
     const isDarkMode = useThemeStore((state) => state.isDarkMode);
     const toggleDarkMode = useThemeStore((state) => state.toggleDarkMode);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const location = useLocation();
+
+    useEffect(() => {
+        const verifyToken = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setIsAuthenticated(false);
+                return;
+            }
+
+            try {
+                const response = await axios.get(`${API_URL}/api/auth/verify`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                setIsAuthenticated(response.data.valid);
+                
+                if (!response.data.valid) {
+                    localStorage.removeItem('token');
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                setIsAuthenticated(false);
+                localStorage.removeItem('token');
+            }
+        };
+
+        verifyToken();
+    }, [location]); // Re-verify when location changes
 
     const toggleSidebar = () => {
         setIsSidebarOpen((prevState) => !prevState);
@@ -40,12 +72,14 @@ const Navbar = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-3 items-center h-16">
                         <div className="flex justify-start">
-                            <button
-                                className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'} focus:outline-none`}
-                                onClick={toggleSidebar}
-                            >
-                                <FaBars className="h-6 w-6" />
-                            </button>
+                            {isAuthenticated && (
+                                <button
+                                    className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'} focus:outline-none`}
+                                    onClick={toggleSidebar}
+                                >
+                                    <FaBars className="h-6 w-6" />
+                                </button>
+                            )}
                         </div>
 
                         <div className="flex justify-center">
@@ -82,7 +116,9 @@ const Navbar = () => {
                     </div>
                 </div>
             </nav>
-            <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} isDarkMode={isDarkMode} />
+            {isAuthenticated && (
+                <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} isDarkMode={isDarkMode} />
+            )}
         </>
     );
 };
