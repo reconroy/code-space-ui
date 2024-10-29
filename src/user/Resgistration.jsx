@@ -179,6 +179,20 @@ const Registration = () => {
     setShowPassword(!showPassword);
   };
 
+  const handleEmailKeyPress = async (e) => {
+    if (e.key === 'Enter' && !otpSent) {
+      e.preventDefault(); // Prevent form submission
+      if (username && 
+          email && 
+          usernameAvailable && 
+          emailAvailable && 
+          username.length >= 3 && 
+          /\S+@\S+\.\S+/.test(email)) {
+        await handleSendOTP();
+      }
+    }
+  };
+
   return (
     <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-white border border-gray-200'}`}>
       <div
@@ -273,6 +287,7 @@ const Registration = () => {
                   const noSpaces = e.target.value.replace(/\s/g, '');
                   handleEmailChange({ ...e, target: { ...e.target, value: noSpaces } });
                 }}
+                onKeyPress={handleEmailKeyPress}
                 disabled={otpSent}
               />
               {email && /\S+@\S+\.\S+/.test(email) && (

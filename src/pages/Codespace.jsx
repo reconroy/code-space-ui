@@ -91,7 +91,7 @@ const CodespacePage = () => {
       if (response.data.status === 'success') {
         setCodespace(response.data.data);
         setCode(response.data.data.content || '');
-        setLanguage(response.data.data.language || 'javascript');
+        setLanguage(response.data.data.language || 'plaintext');
         
         if (response.data.data.access_type === 'private' && !token) {
           setIsAccessDenied(true);
