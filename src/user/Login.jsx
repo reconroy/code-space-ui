@@ -27,21 +27,30 @@ const Login = () => {
       });
   
       if (loginResponse.data.status === 'success' && loginResponse.data.token) {
-        // Only store the token
+        // Store the token
         localStorage.setItem('token', loginResponse.data.token);
         
-        // Get username from login response and use it for navigation
-        const username = loginResponse.data.username;
-        
-        // Navigate directly to user's personal codespace
-        navigate(`/${username}`);
+        // Check if we have a username in the response
+        if (loginResponse.data.username) {
+          // Navigate to homepage first
+          navigate('/');
+        } else {
+          // Fallback to homepage if no username
+          navigate('/');
+          console.warn('No username received in login response');
+        }
+      } else {
+        setError('Invalid response from server');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError(
-        error.response?.data?.message || 
-        'Invalid email/username or password'
-      );
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else if (error.response?.status === 401) {
+        setError('Invalid email/username or password');
+      } else {
+        setError('Failed to login. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +92,13 @@ const Login = () => {
               className={`mt-1 block w-full px-3 py-2 border ${isDarkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
               value={emailOrUsername}
               onChange={(e) => setEmailOrUsername(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+              autoFill="off"
+              onPaste={(e) => e.preventDefault()}
+              onDrop={(e) => e.preventDefault()}
             />
           </div>
           <div>
@@ -98,17 +114,20 @@ const Login = () => {
                 className={`mt-1 block w-full px-3 py-2 border ${isDarkMode ? 'border-gray-700 bg-gray-900 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
+                autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck="false"
+                autoFill="off"
+                onPaste={(e) => e.preventDefault()}
+                onDrop={(e) => e.preventDefault()}
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
               >
-                {showPassword ? <FaEye /> :<FaEyeSlash /> }
+                {showPassword ? <FaEye /> : <FaEyeSlash />}
               </button>
             </div>
           </div>

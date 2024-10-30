@@ -21,14 +21,19 @@ const Layout = () => {
       </header>
 
       <main className="flex-grow overflow-hidden">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/:slug" element={<CodespacePage />} />
-          <Route path="/diff-checker" element={<DiffChecker />} />
+      <Routes>
+          {/* Place specific routes before the dynamic route */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Registration />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/diff-checker" element={<DiffChecker />} />
+          <Route path="/" element={<HomePage />} />
+          
+          {/* Place the dynamic route last */}
+          <Route path="/:slug" element={<CodespacePage />} />
+          
+          {/* Keep catch-all route at the very end */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
