@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import CodeEditor from './CodeEditor';
@@ -7,6 +7,8 @@ import MenuPanel from './../components/MenuPanel';
 import useThemeStore from '../store/useThemeStore';
 import UnauthorizedModal from '../components/UnauthorizedModal';
 import AccessDenied from '../components/AccessDenied';
+import LogoutModal from '../sub_components/LogoutModal';
+
 const debounce = (func, delay) => {
   let timeoutId;
   return (...args) => {
@@ -18,6 +20,7 @@ const debounce = (func, delay) => {
 const CodespacePage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +37,62 @@ const CodespacePage = () => {
   const [codespace, setCodespace] = useState(null);
   const [isAccessDenied, setIsAccessDenied] = useState(false);
   const [ownerUsername, setOwnerUsername] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  useEffect(() => {
+    let isBackButtonClicked = false;
+    
+    const handlePopState = (event) => {
+      event.preventDefault();
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        // If back button was already clicked once
+        if (isBackButtonClicked) {
+          // Stay on current page
+          window.history.pushState(null, '', location.pathname);
+          return;
+        }
+
+        // First back button click
+        isBackButtonClicked = true;
+        setShowLogoutModal(true);
+        
+        // Push current path back to history
+        window.history.pushState(null, '', location.pathname);
+        
+        // Set timeout to reset the back button flag
+        setTimeout(() => {
+          isBackButtonClicked = false;
+        }, 300); // Small timeout to prevent rapid clicks
+      }
+    };
+
+    // Handle initial page load
+    if (localStorage.getItem('token')) {
+      // Clear existing history and replace with current path
+      window.history.pushState(null, '', location.pathname);
+      window.history.pushState(null, '', location.pathname);
+    }
+
+    // Add event listeners
+    window.addEventListener('popstate', handlePopState);
+    
+    // Prevent forward/back navigation
+    const preventNavigation = (e) => {
+      if (localStorage.getItem('token')) {
+        window.history.pushState(null, '', location.pathname);
+      }
+    };
+    window.addEventListener('pushstate', preventNavigation);
+    window.addEventListener('replacestate', preventNavigation);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('pushstate', preventNavigation);
+      window.removeEventListener('replacestate', preventNavigation);
+    };
+  }, [location.pathname]);
 
   useEffect(() => {
     const checkToken = () => {
@@ -343,6 +402,14 @@ const CodespacePage = () => {
           if (!localStorage.getItem('token')) {
             navigate('/');
           }
+        }}
+      />
+      <LogoutModal 
+        isOpen={showLogoutModal} 
+        onClose={() => {
+          setShowLogoutModal(false);
+          // Ensure we stay on current page
+          window.history.pushState(null, '', location.pathname);
         }}
       />
     </>

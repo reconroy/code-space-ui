@@ -168,7 +168,7 @@ const Registration = () => {
 
       // Store token and username
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('username', response.data.data.user.username);
+      // localStorage.setItem('username', response.data.data.user.username);
 
       // Navigate directly to user's default codespace
       navigate(`/${username}`);

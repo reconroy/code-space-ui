@@ -4,7 +4,7 @@ import useThemeStore from '../store/useThemeStore';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Login = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
@@ -15,46 +15,44 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-  
-    try {
-      const loginResponse = await axios.post(`${API_URL}/api/login`, { 
-        emailOrUsername, 
-        password 
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError('');
+
+  try {
+    const loginResponse = await axios.post(`${API_URL}/api/auth/login`, { // Add /auth to the path
+      emailOrUsername, 
+      password 
+    });
+
+    if (loginResponse.data.status === 'success' && loginResponse.data.token) {
+      localStorage.setItem('token', loginResponse.data.token);
+      
+      // Get default codespace after successful login
+      const defaultResponse = await axios.get(`${API_URL}/api/auth/user/default-codespace`, {
+        headers: { Authorization: `Bearer ${loginResponse.data.token}` }
       });
-  
-      if (loginResponse.data.status === 'success' && loginResponse.data.token) {
-        // Store the token
-        localStorage.setItem('token', loginResponse.data.token);
-        
-        // Check if we have a username in the response
-        if (loginResponse.data.username) {
-          // Navigate to homepage first
-          navigate('/');
-        } else {
-          // Fallback to homepage if no username
-          navigate('/');
-          console.warn('No username received in login response');
-        }
+
+      if (defaultResponse.data.defaultCodespace) {
+        navigate(`/${defaultResponse.data.defaultCodespace}`);
       } else {
-        setError('Invalid response from server');
+        navigate(`/${loginResponse.data.username}`);
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      if (error.response?.data?.message) {
-        setError(error.response.data.message);
-      } else if (error.response?.status === 401) {
-        setError('Invalid email/username or password');
-      } else {
-        setError('Failed to login. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Login error:', error);
+    if (error.response?.data?.message) {
+      setError(error.response.data.message);
+    } else if (error.response?.status === 401) {
+      setError('Invalid email/username or password');
+    } else {
+      setError('Failed to login. Please try again.');
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
