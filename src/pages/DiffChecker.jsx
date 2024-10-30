@@ -47,7 +47,7 @@ const DiffChecker = () => {
 
   const fetchDiff = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/diff', { original: originalCode, modified: modifiedCode });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/diff`, { original: originalCode, modified: modifiedCode });
       setDiffResult(response.data);
     } catch (error) {
       console.error('Error fetching diff:', error);
