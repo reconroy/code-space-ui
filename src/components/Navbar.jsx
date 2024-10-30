@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { FaBars, FaMoon, FaSun } from 'react-icons/fa';
 import Sidebar from './Sidebar';
 import useThemeStore from '.././store/useThemeStore';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Navbar = () => {
+    const navigate = useNavigate();
     const isDarkMode = useThemeStore((state) => state.isDarkMode);
     const toggleDarkMode = useThemeStore((state) => state.toggleDarkMode);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -44,6 +45,31 @@ const Navbar = () => {
 
     const toggleSidebar = () => {
         setIsSidebarOpen((prevState) => !prevState);
+    };
+
+    const handleLogoClick = async (e) => {
+        e.preventDefault();
+        
+        if (!isAuthenticated) {
+            navigate('/');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/api/auth/user/default-codespace`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.defaultCodespace) {
+                navigate(`/${response.data.defaultCodespace}`);
+            } else if (response.data.username) {
+                navigate(`/${response.data.username}`);
+            }
+        } catch (error) {
+            console.error('Error fetching default codespace:', error);
+            navigate('/');
+        }
     };
 
     useEffect(() => {
@@ -83,7 +109,13 @@ const Navbar = () => {
                         </div>
 
                         <div className="flex justify-center">
-                            <Link to="/" className="text-2xl font-bold">CodeSpace</Link>
+                            <a 
+                                href="#" 
+                                onClick={handleLogoClick}
+                                className="text-2xl font-bold cursor-pointer"
+                            >
+                                CodeSpace
+                            </a>
                         </div>
 
                         <div className="flex justify-end">
