@@ -68,7 +68,8 @@ const HomePage = () => {
       if (err.response?.status === 404) {
         setError('This codespace does not exist. Would you like to create it?');
       } else if (err.response?.status === 403) {
-        setError('You do not have access to this codespace');
+        const ownerName = err.response.data.owner || 'another user';
+        setError(`You do not have access to this codespace. This codespace is already owned by ${ownerName}.`);
       } else {
         setError('This codespace does not exist. Would you like to create it?');
       }
