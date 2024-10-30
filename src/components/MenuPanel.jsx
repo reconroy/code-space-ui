@@ -85,9 +85,9 @@ const MenuPanel = ({ code, language, onToggleMinimap }) => {
 
   return (
     <>
-      <div className={`w-16 md:w-20 h-full py-2 px-1 md:px-2 shadow-lg flex flex-col items-center
+      <div className={`w-16 md:w-20 h-full py-2 px-1 md:px-2 shadow-lg flex  flex-col items-center
       ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'}`}>
-        <div className="flex-grow flex flex-col items-center">
+        <div className="flex-grow flex flex-col items-center z-50">
           <button
             onClick={handleRunCode}
             className={`p-3 mb-4 rounded-full md:rounded hover:bg-opacity-75 transition-all transform hover:scale-110 
