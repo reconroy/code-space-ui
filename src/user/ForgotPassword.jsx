@@ -5,6 +5,7 @@ import useThemeStore from '../store/useThemeStore';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import debounce from 'lodash/debounce';
 import OTPInput from '../components/OTPInput';
+import { getPatternBackground } from '../utils/backgroundPattern';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -151,10 +152,10 @@ const ForgotPassword = () => {
   if (isSuccess) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className={`max-w-md w-full space-y-8 p-8 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className={`max-w-md w-full space-y-8 p-8 rounded-lg shadow-lg border border-gray-400 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="text-center">
             {/* Success Icon */}
-            <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100 mb-8">
+            <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100 mb-8 border border-gray-400">
               <svg 
                 className="h-16 w-16 text-green-500" 
                 fill="none" 
@@ -231,7 +232,10 @@ const ForgotPassword = () => {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div 
+      className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
+      style={{ backgroundImage: getPatternBackground(isDarkMode) }}
+    >
       <div className={`max-w-md w-full space-y-8 p-8 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <h2 className="text-2xl font-bold text-center mb-4">
           Reset Password

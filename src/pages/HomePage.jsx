@@ -4,6 +4,7 @@ import axios from 'axios';
 import useTypingEffect from './../animations/useTypingEffect';
 import useThemeStore from '.././store/useThemeStore';
 import '../styles/HomePage.css';
+import { getPatternBackground } from '../utils/backgroundPattern';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -77,7 +78,10 @@ const HomePage = () => {
   };
 
   return (
-    <div className="home-page flex-grow flex flex-col items-center justify-center p-4 min-h-screen">
+    <div 
+      className="home-page flex-grow flex flex-col items-center justify-center p-4 min-h-screen"
+      style={{ backgroundImage: getPatternBackground(isDarkMode) }}
+    >
       <div className="text-center w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-3xl">
         <h1 className={`animated-heading ${isDarkMode ? 'text-white' : 'text-gray-800'} text-2xl sm:text-3xl md:text-4xl lg:text-5xl whitespace-nowrap overflow-hidden`}>
           {animatedText}

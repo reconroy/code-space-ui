@@ -6,6 +6,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useTypingEffect from '../animations/useTypingEffect';
 import debounce from 'lodash/debounce';
 import OTPInput from '../components/OTPInput';
+import { getPatternBackground } from '../utils/backgroundPattern';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -197,7 +198,10 @@ const Registration = () => {
   };
 
   return (
-    <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-white border border-gray-200'}`}>
+    <div 
+      className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
+      style={{ backgroundImage: getPatternBackground(isDarkMode) }}
+    >
       <div
         className={`w-full max-w-md p-8 space-y-4 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800 border border-gray-200'} rounded-lg transform transition-all duration-300 hover:scale-105`}
         style={{
