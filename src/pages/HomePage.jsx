@@ -10,10 +10,13 @@ const HomePage = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
 
   const phrases = [
-    "Welcome to CodeSpace!",
+    "Welcome to CodeSpace ",
     "An AI code editor",
     "Share code safely",
-    "Collaborate in real-time"
+    "Collaborate in real-time",
+    "Keep your code private",
+    "Enjoy the simplicity",
+    "Focus on coding !",
   ];
 
   const typingSpeed = 50;
