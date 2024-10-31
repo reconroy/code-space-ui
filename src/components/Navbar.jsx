@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaBars, FaMoon, FaSun } from 'react-icons/fa';
+import { FaBars, FaMoon, FaSun, FaHome } from 'react-icons/fa';
 import Sidebar from './Sidebar';
 import useThemeStore from '.././store/useThemeStore';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -94,17 +94,24 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className={`${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-800'} shadow-md transition-colors duration-300`}>
+            <nav className={`${isDarkMode ? 'bg-gray-800 text-white border-b border-gray-700' : 'bg-gray-100 text-gray-800 shadow-lg shadow-gray-400/50 shadow-b-lg border-b border-gray-200'} transition-colors duration-300`}>
                 <div className="container mx-auto">
                     <div className="h-16 flex items-center">
-                        {/* Left section - Menu Button */}
+                        {/* Left section - Menu Button or Home Button */}   
                         <div className="w-16 sm:w-[180px] md:w-[240px] flex items-center pl-4 sm:pl-6">
-                            {isAuthenticated && (
+                            {isAuthenticated ? (
                                 <button
                                     className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'} focus:outline-none transition-colors duration-200`}
                                     onClick={toggleSidebar}
                                 >
                                     <FaBars className="h-5 w-5 sm:h-6 sm:w-6" />
+                                </button>
+                            ) : (
+                                <button
+                                    className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'} focus:outline-none transition-colors duration-200`}
+                                    onClick={() => navigate('/')}
+                                >
+                                    <FaHome className="h-5 w-5 sm:h-6 sm:w-6" />
                                 </button>
                             )}
                         </div>

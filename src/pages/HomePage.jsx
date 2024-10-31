@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import useTypingEffect from './../animations/useTypingEffect';
@@ -11,6 +11,7 @@ const HomePage = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const [codespaceId, setCodespaceId] = useState('');
   const [error, setError] = useState('');
+  const [userCount, setUserCount] = useState(0);
 
   const phrases = [
     "Welcome to CodeSpace ",
@@ -18,6 +19,7 @@ const HomePage = () => {
     "Share code safely", 
     "Collaborate in real-time",
     "Keep your code private",
+    `Over ${userCount} developers trust CodeSpace!`,
     "Enjoy the simplicity",
     "Focus on coding !",
   ];
@@ -77,32 +79,53 @@ const HomePage = () => {
     }
   };
 
+  // Function to round number to nearest multiple of 5
+  const roundToNearest5 = (num) => {
+    return Math.floor(num / 5) * 5 || 5; // Return at least 5
+  };
+
+  // Fetch user count on component mount
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/count`);
+        const count = response.data.count;
+        setUserCount(roundToNearest5(count));
+      } catch (error) {
+        console.error('Failed to fetch user count:', error);
+        setUserCount(5); // Fallback to 5 if fetch fails
+      }
+    };
+
+    fetchUserCount();
+  }, []);
+
   return (
     <div 
-      className="home-page flex-grow flex flex-col items-center justify-center p-4 min-h-screen"
+      className="home-page flex-grow flex flex-col items-center justify-center p-4 min-h-screen -mt-16"
       style={{ backgroundImage: getPatternBackground(isDarkMode) }}
     >
-      <div className="text-center w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-3xl">
-        <h1 className={`animated-heading ${isDarkMode ? 'text-white' : 'text-gray-800'} text-2xl sm:text-3xl md:text-4xl lg:text-5xl whitespace-nowrap overflow-hidden`}>
+      <div className="text-center w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-3xl px-4">
+        <h1 className={`animated-heading ${isDarkMode ? 'text-white' : 'text-gray-800'} text-xl sm:text-2xl md:text-4xl lg:text-5xl whitespace-nowrap overflow-hidden`}>
           {animatedText}
         </h1>
-        <p className={`mt-4 mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'} text-sm sm:text-base`}>
+        <p className={`mt-4 mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'} text-xs sm:text-sm md:text-base`}>
           Create a new codespace or use a slug in the URL to edit an existing one.
         </p>
         <button 
           onClick={() => createNewCodespace()}
-          className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 text-sm sm:text-base"
+          className="w-full sm:w-auto bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 text-xs sm:text-sm md:text-base"
         >
           Create New Codespace
         </button>
 
         {/* Join Codespace Section */}
         <div className="mt-6 w-full max-w-md mx-auto">
-          <p className={`text-sm mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <p className={`text-xs sm:text-sm mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Or join an existing codespace
           </p>
           <form onSubmit={handleJoinCodespace} className="flex flex-col gap-2">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={codespaceId}
@@ -114,7 +137,7 @@ const HomePage = () => {
                 }}
                 placeholder="Enter Codespace Name"
                 maxLength={16}
-                className={`flex-1 px-4 py-2 rounded-lg border ${
+                className={`w-full px-3 sm:px-4 py-2 rounded-lg border text-sm ${
                   isDarkMode 
                     ? 'bg-gray-800 border-gray-600 text-white' 
                     : 'bg-white border-gray-300'
@@ -123,22 +146,38 @@ const HomePage = () => {
               <button
                 type="submit"
                 disabled={!codespaceId.trim()}
-                className={`${
-                  !codespaceId.trim() 
+                className={`
+                  relative overflow-hidden w-full sm:w-auto
+                  ${!codespaceId.trim() 
                     ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-blue-500 hover:bg-blue-600'
-                } text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out`}
+                    : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600'
+                  }
+                  text-white font-bold py-2 px-4 sm:px-6 rounded-lg
+                  transform transition-all duration-300
+                  hover:scale-105 hover:shadow-lg
+                  active:scale-95
+                  before:absolute before:inset-0
+                  before:bg-gradient-to-r before:from-blue-500 before:to-purple-500
+                  before:opacity-0 before:transition-opacity before:duration-300
+                  hover:before:opacity-100
+                  text-sm
+                `}
               >
-                Join
+                <span className="relative z-10 flex items-center justify-center">
+                  <span className="mr-1">Join</span>
+                  <svg className="w-4 h-4 transform transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
               </button>
             </div>
             {error && codespaceId.trim() && (
               <div className="mt-2 text-center">
-                <p className="text-red-500 text-sm">{error}</p>
+                <p className="text-red-500 text-xs sm:text-sm">{error}</p>
                 {error.includes('does not exist') && (
                   <button
                     onClick={() => createNewCodespace(codespaceId)}
-                    className="text-blue-500 hover:text-blue-600 text-sm mt-1 transition-colors duration-300"
+                    className="text-blue-500 hover:text-blue-600 text-xs sm:text-sm mt-1 transition-colors duration-300"
                   >
                     Create "{codespaceId}" as a public codespace?
                   </button>
@@ -149,20 +188,26 @@ const HomePage = () => {
         </div>
 
         {/* New user section */}
-        <div className="mt-12 text-center">
-          <hr className={`my-8 w-1/2 mx-auto ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`} />
-          <div className="space-x-4">
+        <div className="mt-8 sm:mt-12 text-center mb-24">
+          <hr className={`my-6 sm:my-8 w-full sm:w-1/2 mx-auto ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`} />
+          <div className="flex flex-row justify-center gap-4 sm:gap-6">
             <Link 
               to="/login" 
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
+              className={`group relative overflow-hidden px-6 sm:px-8 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-sm sm:text-base
+                before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-600 before:to-blue-700 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100`}
             >
-              Login
+              <span className="relative z-10 flex items-center justify-center">
+                <span className="transform group-hover:scale-110 transition-transform duration-300">Login</span>
+              </span>
             </Link>
             <Link 
               to="/register" 
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
+              className={`group relative overflow-hidden px-6 sm:px-8 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-sm sm:text-base
+                before:absolute before:inset-0 before:bg-gradient-to-r before:from-green-600 before:to-green-700 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100`}
             >
-              Sign Up
+              <span className="relative z-10 flex items-center justify-center">
+                <span className="transform group-hover:scale-110 transition-transform duration-300">Sign Up</span>
+              </span>
             </Link>
           </div>
         </div>

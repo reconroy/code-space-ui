@@ -199,22 +199,21 @@ const Registration = () => {
 
   return (
     <div 
-      className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
+      className={`flex items-center justify-center min-h-screen shadow-lg ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
       style={{ backgroundImage: getPatternBackground(isDarkMode) }}
     >
       <div
-        className={`w-full max-w-md p-8 space-y-4 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800 border border-gray-200'} rounded-lg transform transition-all duration-300 hover:scale-105`}
+        className={`w-full mb-24 max-w-md p-4 sm:p-8 space-y-4 mx-4 sm:mx-auto ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800 border border-gray-200'} rounded-lg transform transition-all duration-300 hover:scale-105`}
         style={{
           boxShadow: isDarkMode
             ? '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4), inset 0 -5px 10px -5px rgba(255, 255, 255, 0.1)'
-            : '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1), inset 0 -5px 10px -5px rgba(0, 0, 0, 0.05)',
-          transform: 'translateY(-10px)'
+            : '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1), inset 0 -5px 10px -5px rgba(0, 0, 0, 0.05)'
         }}
       >
-        <h2 className="text-2xl font-bold text-center mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-center mb-2">
           Create your account
         </h2>
-        <div className="h-12 text-center text-lg font-medium mb-1 whitespace-nowrap overflow-hidden">
+        <div className="h-12 text-center text-base sm:text-lg font-medium mb-1 whitespace-nowrap overflow-hidden">
           {animatedText}
           <span className="animate-pulse animate-faster">|</span>
         </div>
@@ -368,15 +367,15 @@ const Registration = () => {
                   length={6}
                   value={otp}
                   onChange={setOtp}
-                  onComplete={handleVerifyOTP} // Add this prop to handle Enter key
+                  onComplete={handleVerifyOTP}
                   isDarkMode={isDarkMode}
                 />
-                <div className="flex justify-between items-center mt-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mt-4">
                   <button
                     type="button"
                     onClick={handleVerifyOTP}
                     disabled={otp.length !== 6}
-                    className={`flex-1 mr-2 py-2 px-4 border border-transparent text-sm font-medium rounded-md shadow-sm text-white 
+                    className={`w-full sm:flex-1 py-2 px-4 border border-transparent text-sm font-medium rounded-md shadow-sm text-white 
                       ${otp.length === 6
                         ? 'bg-indigo-600 hover:bg-indigo-700'
                         : 'bg-gray-400 cursor-not-allowed'
@@ -389,7 +388,7 @@ const Registration = () => {
                     type="button"
                     onClick={handleResendOTP}
                     disabled={!resendEnabled}
-                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white 
+                    className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white 
                       ${resendEnabled
                         ? 'bg-indigo-600 hover:bg-indigo-700'
                         : 'bg-gray-400'

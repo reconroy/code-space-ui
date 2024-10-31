@@ -151,7 +151,7 @@ const ForgotPassword = () => {
 
   if (isSuccess) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen  flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className={`max-w-md w-full space-y-8 p-8 rounded-lg shadow-lg border border-gray-400 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="text-center">
             {/* Success Icon */}
@@ -236,7 +236,7 @@ const ForgotPassword = () => {
       className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
       style={{ backgroundImage: getPatternBackground(isDarkMode) }}
     >
-      <div className={`max-w-md w-full space-y-8 p-8 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className={`max-w-md mb-24 w-[95%] sm:w-full space-y-8 p-4 sm:p-8 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <h2 className="text-2xl font-bold text-center mb-4">
           Reset Password
         </h2>
