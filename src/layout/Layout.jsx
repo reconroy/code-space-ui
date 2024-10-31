@@ -8,7 +8,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
-      <header className="flex-shrink-0">
+      <header className={`flex-shrink-0 ${!isDarkMode && 'shadow-lg'}`}>
         <Navbar />
       </header>
 

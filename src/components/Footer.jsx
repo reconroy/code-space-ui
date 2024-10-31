@@ -6,7 +6,7 @@ const Footer = () => {
   const appVersion = import.meta.env.VITE_APP_VERSION;
 
   return (
-    <footer className={`${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'} py-3 sm:py-4 absolute bottom-0 w-full border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} transition-colors duration-300 z-50`}>
+    <footer className={`${isDarkMode ? 'bg-gray-800 text-gray-300 border-t border-gray-700' : 'bg-gray-100 text-gray-600 border-t-2 border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]'} py-3 sm:py-4 absolute bottom-0 w-full transition-colors duration-300 z-50`}>
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-col items-center space-y-3 sm:space-y-0 sm:flex-row sm:justify-between">
           {/* Copyright text - Responsive text size and spacing */}

@@ -65,7 +65,7 @@ const handleSubmit = async (e) => {
       style={{ backgroundImage: getPatternBackground(isDarkMode) }}
     >
       <div 
-        className={`w-full max-w-md p-8 space-y-6 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800 border border-gray-200'} rounded-lg transform transition-all duration-300 hover:scale-105`}
+        className={`w-full mx-4 sm:mx-0 mb-24 max-w-md p-4 sm:p-8 space-y-6 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800 border border-gray-200'} rounded-lg transform transition-all duration-300 hover:scale-105`}
         style={{ 
           boxShadow: isDarkMode 
             ? '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4), inset 0 -5px 10px -5px rgba(255, 255, 255, 0.1)' 
