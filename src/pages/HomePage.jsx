@@ -19,7 +19,7 @@ const HomePage = () => {
     "Share code safely", 
     "Collaborate in real-time",
     "Keep your code private",
-    `Over ${userCount} developers trust CodeSpace!`,
+    // `Over ${userCount} developers trust CodeSpace!`,
     "Enjoy the simplicity",
     "Focus on coding !",
   ];

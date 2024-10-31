@@ -74,9 +74,11 @@ const Registration = () => {
     []
   );
 
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?$/;
+
   const checkEmail = useCallback(
     debounce(async (email) => {
-      if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      if (!email || !emailRegex.test(email)) {
         setEmailAvailable(null);
         return;
       }
