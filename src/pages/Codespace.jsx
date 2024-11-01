@@ -332,7 +332,7 @@ const CodespacePage = () => {
 
   // Debounce the save function to prevent excessive calls
   const debouncedSave = useCallback(
-    debounce((codeToSave, langToSave) => saveCode(codeToSave, langToSave), 1),
+    debounce((codeToSave, langToSave) => saveCode(codeToSave, langToSave), 500),
     [saveCode]
   );
 
