@@ -183,7 +183,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
           wordWrap: 'on',
           minimap: { enabled: isMinimapEnabled },
           suggestOnTriggerCharacters: true,
-          quickSuggestions: true,
+          quickSuggestions: true, 
           autoClosingBrackets: 'always',
           autoIndent: 'full',
           formatOnType: true,
