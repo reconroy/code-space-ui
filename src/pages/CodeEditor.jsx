@@ -5,6 +5,7 @@ import 'highlight.js/styles/github.css';
 import useThemeStore from '../store/useThemeStore';
 import useFontSizeStore from '../store/useFontSizeStore';
 import useLanguageDetectionStore from '../store/useLanguageDetectionStore';
+import useMinimapStore from '../store/useMinimapStore';
 
 // Import languages for highlight.js detection
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -30,7 +31,7 @@ import sql from 'highlight.js/lib/languages/sql';
 const languages = { javascript, python, css, java, cpp, xml, json, markdown, csharp, typescript, ruby, go, rust, swift, kotlin, scala, php, sql };
 Object.entries(languages).forEach(([name, lang]) => hljs.registerLanguage(name, lang));
 
-const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minimapEnabled  ,isAuthenticated }) => {
+const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuthenticated }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const editorRef = useRef(null);
   const { fontSize } = useFontSizeStore();
@@ -38,16 +39,17 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minima
   const isLanguageDetectionEnabled = useLanguageDetectionStore(
     (state) => state.isLanguageDetectionEnabled
   );
+  const { isMinimapEnabled } = useMinimapStore();
 
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.updateOptions({ 
         theme: isDarkMode ? 'vs-dark' : 'light',
         fontSize: fontSize,
-        minimap: { enabled: minimapEnabled }
+        minimap: { enabled: isMinimapEnabled }
       });
     }
-  }, [isDarkMode, fontSize, minimapEnabled]);
+  }, [isDarkMode, fontSize, isMinimapEnabled]);
 
   const detectLanguage = (content) => {
     if (!isAuthenticated || !isLanguageDetectionEnabled) {
@@ -95,7 +97,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minima
     editor.updateOptions({ 
       theme: isDarkMode ? 'vs-dark' : 'light',
       fontSize: fontSize,
-      minimap: { enabled: minimapEnabled }
+      minimap: { enabled: isMinimapEnabled }
     });
 
     editor.onDidChangeCursorSelection((e) => {
@@ -164,7 +166,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minima
   }, [socket]);
 
   return (
-    <div className="h-[calc(100vh-8rem)] w-full">
+    <div className="h-[calc(100vh-7.5rem)] w-full">
       <Monaco
         height="100%"
         width="100%"
@@ -179,7 +181,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minima
           scrollBeyondLastLine: false,
           automaticLayout: true,
           wordWrap: 'on',
-          minimap: { enabled: minimapEnabled },
+          minimap: { enabled: isMinimapEnabled },
           suggestOnTriggerCharacters: true,
           quickSuggestions: true,
           autoClosingBrackets: 'always',
