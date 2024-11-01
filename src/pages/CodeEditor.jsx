@@ -166,7 +166,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
   }, [socket]);
 
   return (
-    <div className="h-[calc(100vh-8rem)] w-full">
+    <div className="h-[calc(100vh-7.5rem)] w-full">
       <Monaco
         height="100%"
         width="100%"
