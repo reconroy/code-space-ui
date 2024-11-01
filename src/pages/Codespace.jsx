@@ -303,8 +303,9 @@ const CodespacePage = () => {
     }
   }, [slug, socket, isPrivateCodespace]);
 
+  // Debounce the save function to prevent excessive calls
   const debouncedSave = useCallback(
-    debounce((codeToSave, langToSave) => saveCode(codeToSave, langToSave), 1000),
+    debounce((codeToSave, langToSave) => saveCode(codeToSave, langToSave), 1),
     [saveCode]
   );
 

@@ -45,12 +45,45 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minima
     }
   }, [isDarkMode, fontSize, minimapEnabled]);
 
+  const detectLanguage = (content) => {
+    if (!content || content.trim() === '') return 'plaintext';
+
+    try {
+      const result = hljs.highlightAuto(content, Object.keys(languages));
+      console.log('Language detection:', result.language, 'Relevance:', result.relevance);
+      
+      if (result.relevance > 1) {
+        return result.language;
+      }
+      return 'plaintext';
+    } catch (error) {
+      console.error('Language detection error:', error);
+      return 'plaintext';
+    }
+  };
+
   const handleEditorChange = (value) => {
     setCode(value);
+    if (value && value.length > 10) {
+      const detectedLang = detectLanguage(value);
+      if (detectedLang !== language) {
+        console.log('Changing language from', language, 'to', detectedLang);
+        setLanguage(detectedLang);
+      }
+    }
   };
 
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
+    
+    // Initial language detection
+    if (code) {
+      const detectedLang = detectLanguage(code);
+      if (detectedLang !== language) {
+        setLanguage(detectedLang);
+      }
+    }
+
     editor.updateOptions({ 
       theme: isDarkMode ? 'vs-dark' : 'light',
       fontSize: fontSize,
