@@ -27,7 +27,8 @@ const Sidebar = ({ isOpen, onClose, isDarkMode }) => {
       {/* Sidebar */}
       <div 
         ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full w-64 
+        className={`fixed top-0 left-0 h-full 
+          w-64 sm:w-72 md:w-80 lg:w-96  // Responsive widths for different screen sizes
           ${isDarkMode 
             ? 'bg-gray-800 text-white border-r border-gray-700' 
             : 'bg-gray-100 text-gray-800 border-r border-gray-200'} 
