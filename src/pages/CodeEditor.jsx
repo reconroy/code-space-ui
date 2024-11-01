@@ -4,6 +4,7 @@ import hljs from 'highlight.js/lib/core';
 import 'highlight.js/styles/github.css';
 import useThemeStore from '../store/useThemeStore';
 import useFontSizeStore from '../store/useFontSizeStore';
+import useLanguageDetectionStore from '../store/useLanguageDetectionStore';
 
 // Import languages for highlight.js detection
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -29,12 +30,14 @@ import sql from 'highlight.js/lib/languages/sql';
 const languages = { javascript, python, css, java, cpp, xml, json, markdown, csharp, typescript, ruby, go, rust, swift, kotlin, scala, php, sql };
 Object.entries(languages).forEach(([name, lang]) => hljs.registerLanguage(name, lang));
 
-const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minimapEnabled  ,isAuthenticated,
-  isLanguageDetectionEnabled  }) => {
+const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minimapEnabled  ,isAuthenticated }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const editorRef = useRef(null);
   const { fontSize } = useFontSizeStore();
   const [decorations, setDecorations] = useState([]);
+  const isLanguageDetectionEnabled = useLanguageDetectionStore(
+    (state) => state.isLanguageDetectionEnabled
+  );
 
   useEffect(() => {
     if (editorRef.current) {

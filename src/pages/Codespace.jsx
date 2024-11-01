@@ -8,6 +8,32 @@ import useThemeStore from '../store/useThemeStore';
 import UnauthorizedModal from '../components/UnauthorizedModal';
 import AccessDenied from '../components/AccessDenied';
 import LogoutModal from '../sub_components/LogoutModal';
+import useLanguageDetectionStore from '../store/useLanguageDetectionStore';
+import hljs from 'highlight.js/lib/core';
+
+// Import languages for highlight.js detection
+import javascript from 'highlight.js/lib/languages/javascript';
+import python from 'highlight.js/lib/languages/python';
+import css from 'highlight.js/lib/languages/css';
+import java from 'highlight.js/lib/languages/java';
+import cpp from 'highlight.js/lib/languages/cpp';
+import xml from 'highlight.js/lib/languages/xml';
+import json from 'highlight.js/lib/languages/json';
+import markdown from 'highlight.js/lib/languages/markdown';
+import csharp from 'highlight.js/lib/languages/csharp';
+import typescript from 'highlight.js/lib/languages/typescript';
+import ruby from 'highlight.js/lib/languages/ruby';
+import go from 'highlight.js/lib/languages/go';
+import rust from 'highlight.js/lib/languages/rust';
+import swift from 'highlight.js/lib/languages/swift';
+import kotlin from 'highlight.js/lib/languages/kotlin';
+import scala from 'highlight.js/lib/languages/scala'; 
+import php from 'highlight.js/lib/languages/php';
+import sql from 'highlight.js/lib/languages/sql';
+
+// Register languages with highlight.js
+const languages = { javascript, python, css, java, cpp, xml, json, markdown, csharp, typescript, ruby, go, rust, swift, kotlin, scala, php, sql };
+Object.entries(languages).forEach(([name, lang]) => hljs.registerLanguage(name, lang));
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -38,7 +64,7 @@ const CodespacePage = () => {
   const [isAccessDenied, setIsAccessDenied] = useState(false);
   const [ownerUsername, setOwnerUsername] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isLanguageDetectionEnabled, setIsLanguageDetectionEnabled] = useState(true);
+  const { isLanguageDetectionEnabled, toggleLanguageDetection } = useLanguageDetectionStore();
 
   useEffect(() => {
     let isBackButtonClicked = false;
@@ -355,20 +381,31 @@ const CodespacePage = () => {
   }, [fetchCodespace]);
 
   const handleToggleLanguageDetection = async () => {
+    toggleLanguageDetection();
+    
+    // Get the new state after toggle
     const newState = !isLanguageDetectionEnabled;
-    setIsLanguageDetectionEnabled(newState);
-
-    // If turning off detection, set language to plaintext and save
+    
     if (!newState) {
       setLanguage('plaintext');
       await saveCode(code, 'plaintext');
     } else {
-      // If turning on detection, detect current language and save
-      const detectedLang = detectLanguage(code);
+      const detectedLang = hljs.highlightAuto(code, Object.keys(languages)).language || 'plaintext';
       setLanguage(detectedLang);
       await saveCode(code, detectedLang);
     }
   };
+
+  // Effect for language detection
+  useEffect(() => {
+    if (isLanguageDetectionEnabled && code) {
+      const detectedLang = hljs.highlightAuto(code, Object.keys(languages)).language || 'plaintext';
+      if (detectedLang !== language) {
+        setLanguage(detectedLang);
+        saveCode(code, detectedLang);
+      }
+    }
+  }, [isLanguageDetectionEnabled]);
 
   if (isLoading) return (
     <div className={`flex-grow flex items-center justify-center ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
@@ -399,7 +436,6 @@ const CodespacePage = () => {
             slug={slug}
             minimapEnabled={minimapEnabled}
             isAuthenticated={isAuthenticated}
-            isLanguageDetectionEnabled={isLanguageDetectionEnabled}
           />
         </div>
         {isAuthenticated && (

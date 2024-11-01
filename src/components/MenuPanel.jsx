@@ -5,6 +5,7 @@ import useThemeStore from '../store/useThemeStore';
 import useFontSizeStore from '../store/useFontSizeStore';
 import FontSizeSlider from '../sub_components/FontSizeSlider';
 import LogoutModal from '../sub_components/LogoutModal';
+import useLanguageDetectionStore from '../store/useLanguageDetectionStore';
 
 const languageExtensions = {
   javascript: 'js',
@@ -30,12 +31,15 @@ const languageExtensions = {
   sql: 'sql'
 };
 
-const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection, isLanguageDetectionEnabled }) => {
+const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const { showFontSizeSlider, toggleFontSizeSlider } = useFontSizeStore();
   const [copySuccess, setCopySuccess] = useState(false);
   const [minimapEnabled, setMinimapEnabled] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const isLanguageDetectionEnabled = useLanguageDetectionStore(
+    (state) => state.isLanguageDetectionEnabled
+  );
 
   const handleToggleMinimap = () => {
     setMinimapEnabled(!minimapEnabled);
