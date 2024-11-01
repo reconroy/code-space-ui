@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const useAuthStore = create((set) => ({
   user: null,
+  setUser: (user) => set({ user }),
   isAuthenticated: false,
   loading: false,
   error: null,

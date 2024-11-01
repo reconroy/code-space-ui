@@ -9,6 +9,7 @@ import Login from './user/Login';
 import Registration from './user/Registration';
 import ForgotPassword from './user/ForgotPassword';
 import ChangePassword from './user/ChangePassword';
+import Settings from './user/Settings';
 import GuestRoute from './routes/GuestRoute';
 import ProtectedRoute from './routes/ProtectedRoute';
 import HomeRoute from './routes/HomeRoute';
@@ -66,7 +67,17 @@ function App() {
             </Layout>
           </ProtectedRoute>
         } />
-        
+        {/* Protected Settings Route */}
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Settings />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         {/* Dynamic codespace route */}
         <Route path="/:slug" element={
           <Layout>
