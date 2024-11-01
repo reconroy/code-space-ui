@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FaBars, FaMoon, FaSun, FaHome } from 'react-icons/fa';
+import { FaBars, FaMoon, FaSun, FaHome, FaExpand, FaCompress } from 'react-icons/fa';
 import Sidebar from './Sidebar';
 import useThemeStore from '.././store/useThemeStore';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import useFullscreenStore from '../store/useFullscreenStore';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -14,6 +15,7 @@ const Navbar = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const location = useLocation();
+    const { isFullscreen, setFullscreen } = useFullscreenStore();
 
     useEffect(() => {
         const verifyToken = async () => {
@@ -92,6 +94,75 @@ const Navbar = () => {
         }
     }, [location]);
 
+    // Function to check if browser is in fullscreen mode
+    const isBrowserFullscreen = () => !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+    );
+
+    // Handle fullscreen toggle
+    const handleFullscreen = async () => {
+        try {
+            if (!isBrowserFullscreen()) {
+                await document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                }
+            }
+        } catch (err) {
+            console.error('Fullscreen error:', err);
+        }
+    };
+
+    // Effect to maintain fullscreen state on refresh and handle F11
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const fullscreenState = isBrowserFullscreen();
+            setFullscreen(fullscreenState);
+        };
+
+        // Handle F11 key
+        const handleKeyDown = (e) => {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                handleFullscreenChange();
+            }
+        };
+
+        // Add event listeners for all browser variants
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+        document.addEventListener('keydown', handleKeyDown);
+
+        // Check initial state
+        handleFullscreenChange();
+
+        // Restore fullscreen if it was active before refresh
+        const restoreFullscreen = async () => {
+            if (isFullscreen && !isBrowserFullscreen()) {
+                try {
+                    await document.documentElement.requestFullscreen();
+                } catch (err) {
+                    console.error('Error restoring fullscreen:', err);
+                }
+            }
+        };
+        restoreFullscreen();
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isFullscreen, setFullscreen]);
+
     return (
         <>
             <nav className={`${isDarkMode ? 'bg-gray-800 text-white border-b border-gray-700' : 'bg-gray-100 text-gray-800 shadow-lg shadow-gray-400/50 shadow-b-lg border-b border-gray-200'} transition-colors duration-300`}>
@@ -130,6 +201,23 @@ const Navbar = () => {
                         {/* Right section - Theme Toggle */}
                         <div className="w-16 sm:w-[180px] md:w-[240px] flex justify-end pr-4 sm:pr-6">
                             <div className="hidden sm:flex items-center space-x-3">
+                                {/* Fullscreen Toggle */}
+                                <button
+                                    onClick={handleFullscreen}
+                                    className={`focus:outline-none transition-colors duration-200 p-1 rounded-lg
+                                        ${isDarkMode 
+                                            ? 'hover:bg-gray-700 text-gray-300 hover:text-white' 
+                                            : 'hover:bg-gray-200 text-gray-600 hover:text-gray-800'}`}
+                                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                                >
+                                    {isBrowserFullscreen() ? (
+                                        <FaCompress className="h-4 w-4 sm:h-5 sm:w-5" />
+                                    ) : (
+                                        <FaExpand className="h-4 w-4 sm:h-5 sm:w-5" />
+                                    )}
+                                </button>
+
+                                {/* Existing Theme Toggle */}
                                 <FaSun className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode ? 'text-gray-500' : 'text-yellow-500'}`} />
                                 <label className="switch relative inline-block w-12 sm:w-14 h-6 sm:h-7">
                                     <input
@@ -153,17 +241,32 @@ const Navbar = () => {
                                 </label>
                                 <FaMoon className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
                             </div>
-                            <button
-                                className="sm:hidden focus:outline-none"
-                                onClick={toggleDarkMode}
-                                aria-label="Toggle theme"
-                            >
-                                {isDarkMode ? (
-                                    <FaSun className="h-5 w-5 text-yellow-500" />
-                                ) : (
-                                    <FaMoon className="h-5 w-5 text-gray-600" />
-                                )}
-                            </button>
+
+                            {/* Mobile Theme Toggle */}
+                            <div className="sm:hidden flex items-center space-x-2">
+                                <button
+                                    onClick={handleFullscreen}
+                                    className="focus:outline-none p-1"
+                                    aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                                >
+                                    {isFullscreen ? (
+                                        <FaCompress className="h-5 w-5" />
+                                    ) : (
+                                        <FaExpand className="h-5 w-5" />
+                                    )}
+                                </button>
+                                <button
+                                    className="focus:outline-none"
+                                    onClick={toggleDarkMode}
+                                    aria-label="Toggle theme"
+                                >
+                                    {isDarkMode ? (
+                                        <FaSun className="h-5 w-5 text-yellow-500" />
+                                    ) : (
+                                        <FaMoon className="h-5 w-5 text-gray-600" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
