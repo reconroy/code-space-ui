@@ -6,6 +6,7 @@ import useFontSizeStore from '../store/useFontSizeStore';
 import FontSizeSlider from '../sub_components/FontSizeSlider';
 import LogoutModal from '../sub_components/LogoutModal';
 import useLanguageDetectionStore from '../store/useLanguageDetectionStore';
+import useMinimapStore from '../store/useMinimapStore';
 
 const languageExtensions = {
   javascript: 'js',
@@ -40,6 +41,7 @@ const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection 
   const isLanguageDetectionEnabled = useLanguageDetectionStore(
     (state) => state.isLanguageDetectionEnabled
   );
+  const { isMinimapEnabled, toggleMinimap } = useMinimapStore();
 
   const handleToggleMinimap = () => {
     setMinimapEnabled(!minimapEnabled);
@@ -141,15 +143,15 @@ const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection 
             )}
           </div>
           <button
-            onClick={handleToggleMinimap}
+            onClick={toggleMinimap}
             className={`p-3 mb-4 rounded-full md:rounded hover:bg-opacity-75 transition-transform transform hover:scale-110 
-          ${minimapEnabled 
-            ? 'bg-blue-500 text-white' 
-            : isDarkMode 
-              ? 'bg-gray-700 text-white' 
-              : 'bg-gray-300 text-black'}`}
+            ${isMinimapEnabled 
+              ? 'bg-blue-500 text-white' 
+              : isDarkMode 
+                ? 'bg-gray-700 text-white' 
+                : 'bg-gray-300 text-black'}`}
             aria-label="Toggle Minimap"
-            title={minimapEnabled ? "Disable Minimap" : "Enable Minimap"}
+            title={isMinimapEnabled ? "Disable Minimap" : "Enable Minimap"}
           >
             <FaMap className="text-xl md:text-2xl" />
           </button>
