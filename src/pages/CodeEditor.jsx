@@ -4,6 +4,7 @@ import hljs from 'highlight.js/lib/core';
 import 'highlight.js/styles/github.css';
 import useThemeStore from '../store/useThemeStore';
 import useFontSizeStore from '../store/useFontSizeStore';
+import useLanguageDetectionStore from '../store/useLanguageDetectionStore';
 
 // Import languages for highlight.js detection
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -29,11 +30,14 @@ import sql from 'highlight.js/lib/languages/sql';
 const languages = { javascript, python, css, java, cpp, xml, json, markdown, csharp, typescript, ruby, go, rust, swift, kotlin, scala, php, sql };
 Object.entries(languages).forEach(([name, lang]) => hljs.registerLanguage(name, lang));
 
-const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minimapEnabled }) => {
+const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minimapEnabled  ,isAuthenticated }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const editorRef = useRef(null);
   const { fontSize } = useFontSizeStore();
   const [decorations, setDecorations] = useState([]);
+  const isLanguageDetectionEnabled = useLanguageDetectionStore(
+    (state) => state.isLanguageDetectionEnabled
+  );
 
   useEffect(() => {
     if (editorRef.current) {
@@ -45,12 +49,49 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minima
     }
   }, [isDarkMode, fontSize, minimapEnabled]);
 
+  const detectLanguage = (content) => {
+    if (!isAuthenticated || !isLanguageDetectionEnabled) {
+      return 'plaintext';
+    }
+
+    if (!content || content.trim() === '') return 'plaintext';
+
+    try {
+      const result = hljs.highlightAuto(content, Object.keys(languages));
+      console.log('Language detection:', result.language, 'Relevance:', result.relevance);
+      
+      if (result.relevance > 1) {
+        return result.language;
+      }
+      return 'plaintext';
+    } catch (error) {
+      console.error('Language detection error:', error);
+      return 'plaintext';
+    }
+  };
+
   const handleEditorChange = (value) => {
     setCode(value);
+    if (value && value.length > 10) {
+      const detectedLang = detectLanguage(value);
+      if (detectedLang !== language) {
+        console.log('Changing language from', language, 'to', detectedLang);
+        setLanguage(detectedLang);
+      }
+    }
   };
 
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
+    
+    // Initial language detection
+    if (code) {
+      const detectedLang = detectLanguage(code);
+      if (detectedLang !== language) {
+        setLanguage(detectedLang);
+      }
+    }
+
     editor.updateOptions({ 
       theme: isDarkMode ? 'vs-dark' : 'light',
       fontSize: fontSize,
