@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaDownload, FaTextHeight, FaRandom, FaCopy, FaMap, FaPlay, FaExchangeAlt, FaSignOutAlt } from 'react-icons/fa';
+import { FaDownload, FaTextHeight, FaRandom, FaCopy, FaMap, FaPlay, FaExchangeAlt, FaSignOutAlt, FaLanguage } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import useThemeStore from '../store/useThemeStore';
 import useFontSizeStore from '../store/useFontSizeStore';
@@ -30,7 +30,7 @@ const languageExtensions = {
   sql: 'sql'
 };
 
-const MenuPanel = ({ code, language, onToggleMinimap }) => {
+const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection, isLanguageDetectionEnabled }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const { showFontSizeSlider, toggleFontSizeSlider } = useFontSizeStore();
   const [copySuccess, setCopySuccess] = useState(false);
@@ -139,8 +139,11 @@ const MenuPanel = ({ code, language, onToggleMinimap }) => {
           <button
             onClick={handleToggleMinimap}
             className={`p-3 mb-4 rounded-full md:rounded hover:bg-opacity-75 transition-transform transform hover:scale-110 
-          ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-300 text-black'}
-          ${minimapEnabled ? 'bg-blue-500' : ''}`}
+          ${minimapEnabled 
+            ? 'bg-blue-500 text-white' 
+            : isDarkMode 
+              ? 'bg-gray-700 text-white' 
+              : 'bg-gray-300 text-black'}`}
             aria-label="Toggle Minimap"
             title={minimapEnabled ? "Disable Minimap" : "Enable Minimap"}
           >
@@ -164,6 +167,19 @@ const MenuPanel = ({ code, language, onToggleMinimap }) => {
           >
             <FaExchangeAlt className="text-xl md:text-2xl" />
           </Link>
+          <button
+            onClick={onToggleLanguageDetection}
+            className={`p-3 mt-4 rounded-full md:rounded hover:bg-opacity-75 transition-transform transform hover:scale-110 
+            ${isLanguageDetectionEnabled 
+              ? 'bg-blue-500 text-white' 
+              : isDarkMode 
+                ? 'bg-gray-700 text-white' 
+                : 'bg-gray-300 text-black'}`}
+            aria-label="Toggle Language Detection"
+            title={isLanguageDetectionEnabled ? "Disable Language Detection" : "Enable Language Detection"}
+          >
+            <FaLanguage className="text-xl md:text-2xl" />
+          </button>
         </div>
         <button
           onClick={() => setShowLogoutModal(true)}

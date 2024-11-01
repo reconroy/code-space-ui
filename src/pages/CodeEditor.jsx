@@ -29,7 +29,8 @@ import sql from 'highlight.js/lib/languages/sql';
 const languages = { javascript, python, css, java, cpp, xml, json, markdown, csharp, typescript, ruby, go, rust, swift, kotlin, scala, php, sql };
 Object.entries(languages).forEach(([name, lang]) => hljs.registerLanguage(name, lang));
 
-const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minimapEnabled }) => {
+const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minimapEnabled  ,isAuthenticated,
+  isLanguageDetectionEnabled  }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const editorRef = useRef(null);
   const { fontSize } = useFontSizeStore();
@@ -46,6 +47,10 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, minima
   }, [isDarkMode, fontSize, minimapEnabled]);
 
   const detectLanguage = (content) => {
+    if (!isAuthenticated || !isLanguageDetectionEnabled) {
+      return 'plaintext';
+    }
+
     if (!content || content.trim() === '') return 'plaintext';
 
     try {

@@ -38,6 +38,7 @@ const CodespacePage = () => {
   const [isAccessDenied, setIsAccessDenied] = useState(false);
   const [ownerUsername, setOwnerUsername] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLanguageDetectionEnabled, setIsLanguageDetectionEnabled] = useState(true);
 
   useEffect(() => {
     let isBackButtonClicked = false;
@@ -353,6 +354,22 @@ const CodespacePage = () => {
     verifyTokenAndFetch();
   }, [fetchCodespace]);
 
+  const handleToggleLanguageDetection = async () => {
+    const newState = !isLanguageDetectionEnabled;
+    setIsLanguageDetectionEnabled(newState);
+
+    // If turning off detection, set language to plaintext and save
+    if (!newState) {
+      setLanguage('plaintext');
+      await saveCode(code, 'plaintext');
+    } else {
+      // If turning on detection, detect current language and save
+      const detectedLang = detectLanguage(code);
+      setLanguage(detectedLang);
+      await saveCode(code, detectedLang);
+    }
+  };
+
   if (isLoading) return (
     <div className={`flex-grow flex items-center justify-center ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
@@ -381,7 +398,8 @@ const CodespacePage = () => {
             socket={socket}
             slug={slug}
             minimapEnabled={minimapEnabled}
-            readOnly={isPrivateCodespace && !localStorage.getItem('token')}
+            isAuthenticated={isAuthenticated}
+            isLanguageDetectionEnabled={isLanguageDetectionEnabled}
           />
         </div>
         {isAuthenticated && (
@@ -391,6 +409,8 @@ const CodespacePage = () => {
               language={language}
               onLanguageChange={handleLanguageChange}
               onToggleMinimap={handleToggleMinimap}
+              onToggleLanguageDetection={handleToggleLanguageDetection}
+              isLanguageDetectionEnabled={isLanguageDetectionEnabled}
               createCodespace={createCodespace}
             />
           </div>
