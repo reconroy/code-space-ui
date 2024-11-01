@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaCog } from 'react-icons/fa';
 import useAuthStore from '../store/useAuthStore';
@@ -6,8 +6,14 @@ import useThemeStore from '../store/useThemeStore';
 
 const UserProfile = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const isDarkMode = useThemeStore(state => state.isDarkMode);
+  const { user, isLoading, fetchUserData } = useAuthStore();
+
+  useEffect(() => {
+    if (!user) {
+      fetchUserData();
+    }
+  }, [fetchUserData]);
 
   const handleSettingsClick = (e) => {
     e.preventDefault();
@@ -22,10 +28,18 @@ const UserProfile = () => {
           ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} 
           flex items-center justify-center flex-shrink-0`}
         >
-          {user?.username?.charAt(0).toUpperCase() || 'U'}
+          {isLoading ? (
+            <div className="animate-pulse w-6 h-6 bg-gray-500 rounded-full" />
+          ) : (
+            user?.username?.charAt(0).toUpperCase() || 'U'
+          )}
         </div>
         <span className="ml-3 font-medium truncate">
-          {user?.username || 'Loading...'}
+          {isLoading ? (
+            <div className="animate-pulse w-24 h-4 bg-gray-500 rounded" />
+          ) : (
+            user?.username || 'Not logged in'
+          )}
         </span>
       </div>
       

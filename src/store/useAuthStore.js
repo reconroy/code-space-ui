@@ -1,18 +1,18 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const useAuthStore = create((set) => ({
   user: null,
-  setUser: (user) => set({ user }),
-  isAuthenticated: false,
-  loading: false,
+  isLoading: false,
   error: null,
 
   // Login user
   login: async (emailOrUsername, password) => {
     try {
-      set({ loading: true, error: null });
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      set({ isLoading: true, error: null });
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         emailOrUsername,
         password
       });
@@ -21,15 +21,14 @@ const useAuthStore = create((set) => ({
         localStorage.setItem('token', response.data.token);
         set({ 
           user: response.data.user,
-          isAuthenticated: true,
-          loading: false 
+          isLoading: false 
         });
         return true;
       }
     } catch (error) {
       set({ 
         error: error.response?.data?.message || 'An error occurred during login',
-        loading: false 
+        isLoading: false 
       });
       return false;
     }
@@ -38,8 +37,8 @@ const useAuthStore = create((set) => ({
   // Register user
   register: async (username, email, password) => {
     try {
-      set({ loading: true, error: null });
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+      set({ isLoading: true, error: null });
+      const response = await axios.post(`${API_URL}/api/auth/register`, {
         username,
         email,
         password
@@ -49,15 +48,14 @@ const useAuthStore = create((set) => ({
         localStorage.setItem('token', response.data.token);
         set({ 
           user: response.data.user,
-          isAuthenticated: true,
-          loading: false 
+          isLoading: false 
         });
         return true;
       }
     } catch (error) {
       set({ 
         error: error.response?.data?.message || 'An error occurred during registration',
-        loading: false 
+        isLoading: false 
       });
       return false;
     }
@@ -69,7 +67,7 @@ const useAuthStore = create((set) => ({
       const token = localStorage.getItem('token');
       if (token) {
         await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/auth/logout`,
+          `${API_URL}/api/auth/logout`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` }
@@ -82,54 +80,47 @@ const useAuthStore = create((set) => ({
       localStorage.removeItem('token');
       set({ 
         user: null,
-        isAuthenticated: false,
         error: null 
       });
     }
   },
 
-  // Check auth status and refresh user data
-  checkAuth: async () => {
+  // Fetch user data
+  fetchUserData: async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    set({ isLoading: true });
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        set({ 
-          user: null,
-          isAuthenticated: false,
-          loading: false 
-        });
-        return;
-      }
+      // First verify the token
+      const verifyResponse = await axios.get(`${API_URL}/api/auth/verify`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/auth/verify`,
-        {
+      if (verifyResponse.data.valid) {
+        // Get default codespace info which includes user data
+        const userResponse = await axios.get(`${API_URL}/api/auth/user/default-codespace`, {
           headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+        });
 
-      if (response.data.valid) {
         set({ 
-          user: response.data.user,
-          isAuthenticated: true,
-          loading: false 
+          user: {
+            username: userResponse.data.username,
+            // Add other user fields you need
+          }, 
+          isLoading: false, 
+          error: null 
         });
       } else {
         localStorage.removeItem('token');
-        set({ 
-          user: null,
-          isAuthenticated: false,
-          loading: false 
-        });
+        set({ user: null, isLoading: false, error: 'Invalid token' });
       }
     } catch (error) {
-      localStorage.removeItem('token');
-      set({ 
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        error: 'Authentication failed' 
-      });
+      console.error('Failed to fetch user data:', error);
+      set({ error: error.message, isLoading: false });
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+      }
     }
   },
 
@@ -139,10 +130,10 @@ const useAuthStore = create((set) => ({
   // Update user profile
   updateProfile: async (userData) => {
     try {
-      set({ loading: true, error: null });
+      set({ isLoading: true, error: null });
       const token = localStorage.getItem('token');
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/auth/profile`,
+        `${API_URL}/api/auth/profile`,
         userData,
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -151,17 +142,20 @@ const useAuthStore = create((set) => ({
 
       set({ 
         user: response.data.user,
-        loading: false 
+        isLoading: false 
       });
       return true;
     } catch (error) {
       set({ 
         error: error.response?.data?.message || 'Failed to update profile',
-        loading: false 
+        isLoading: false 
       });
       return false;
     }
-  }
+  },
+
+  // Clear user data (for logout)
+  clearUser: () => set({ user: null, error: null }),
 }));
 
 export default useAuthStore;
