@@ -63,20 +63,34 @@ const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
       case 'public':
         return `${baseStyle} bg-rose-500 hover:bg-rose-600`;
       case 'shared':
-        return `${baseStyle} bg-rose-500 hover:bg-rose-600`;
+        return `${baseStyle} bg-yellow-500 hover:bg-yellow-600`;
       default:
         return `${baseStyle} bg-rose-500 hover:bg-rose-600`;
     }
   };
 
   const getAccessIcon = () => {
+    let iconClass = "w-3.5 h-3.5";
+    
+    if (!isDarkMode) {
+      if (isDefault) {
+        iconClass += " text-emerald-500";
+      } else if (codespace.access_type === 'shared') {
+        iconClass += " text-yellow-500";
+      } else {
+        iconClass += " text-rose-500";
+      }
+    } else {
+      iconClass += " text-white";
+    }
+    
     switch (codespace.access_type) {
       case 'private':
-        return <FaLock className="w-3.5 h-3.5" />;
+        return <FaLock className={iconClass} />;
       case 'public':
-        return <FaGlobe className="w-3.5 h-3.5" />;
+        return <FaGlobe className={iconClass} />;
       case 'shared':
-        return <FaUsers className="w-3.5 h-3.5" />;
+        return <FaUsers className={iconClass} />;
       default:
         return null;
     }
@@ -94,6 +108,13 @@ const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
     }
   ];
 
+  const getIconContainerStyle = () => {
+    if (isDarkMode) {
+      return "bg-white/10";
+    }
+    return "bg-white";
+  };
+
   return (
     <>
       <div className="relative">
@@ -106,7 +127,7 @@ const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
           )}
           
           <div className="flex items-center space-x-3 flex-1">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-white bg-opacity-10">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-md ${getIconContainerStyle()}`}>
               {getAccessIcon()}
             </div>
             <div className="flex flex-col">

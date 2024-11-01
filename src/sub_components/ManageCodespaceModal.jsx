@@ -10,8 +10,10 @@ import {
   faJsSquare, faPython, faCss3Alt,
   faJava, faPhp
 } from '@fortawesome/free-brands-svg-icons';
+import useThemeStore from '../store/useThemeStore';
 
-const ManageCodespaceModal = ({ isOpen, onClose, codespace, isDarkMode }) => {
+const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
+  const isDarkMode = useThemeStore(state => state.isDarkMode);
   const [newSlug, setNewSlug] = useState(codespace?.slug || '');
   const [accessType, setAccessType] = useState(codespace?.access_type || 'private');
   
@@ -69,7 +71,7 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace, isDarkMode }) => {
     return (
       <div className="space-y-6">
         {/* Info Banner */}
-        <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
+        <div className={`p-4 mt-2 rounded-lg ${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
           <div className="flex items-start">
             <FontAwesomeIcon 
               icon={faInfoCircle} 
@@ -79,7 +81,6 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace, isDarkMode }) => {
               <h4 className="font-medium text-blue-500">Default Codespace</h4>
               <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 This is your default workspace. It cannot be renamed, archived, or deleted. 
-                All your primary configurations and settings are stored here.
               </p>
             </div>
           </div>
@@ -147,90 +148,131 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace, isDarkMode }) => {
     );
   };
 
-  const RegularCodespaceContent = () => (
-    <div className="mt-6 space-y-6">
-      {/* Rename Section */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-400">
-          Rename Codespace
-        </label>
-        <div className="mt-1">
-          <input
-            type="text"
-            value={newSlug}
-            onChange={(e) => setNewSlug(e.target.value)}
-            className={`block w-full rounded-lg border px-4 py-2.5
-              ${isDarkMode 
-                ? 'bg-[#2d2d2d] border-gray-700 focus:border-blue-500' 
-                : 'bg-white border-gray-300 focus:border-blue-500'}
-              focus:outline-none focus:ring-1 focus:ring-blue-500
-              transition-colors`}
-            placeholder="Enter new name"
-          />
-        </div>
-      </div>
+  const RegularCodespaceContent = () => {
+    const currentLanguage = codespace?.language?.toLowerCase() || 'plaintext';
+    const config = languageConfig[currentLanguage];
 
-      {/* Access Type Section */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-400">
-          Access Type
-        </label>
-        <div className="space-y-2">
-          {accessTypes.map((type) => (
-            <div
-              key={type.id}
-              onClick={() => setAccessType(type.id)}
-              className={`flex items-center p-4 rounded-lg cursor-pointer
-                ${accessType === type.id 
-                  ? isDarkMode 
-                    ? 'bg-blue-500/10 border-2 border-blue-500' 
-                    : 'bg-blue-50 border-2 border-blue-500'
-                  : `border-2 border-transparent 
-                     ${isDarkMode ? 'hover:bg-[#2d2d2d]' : 'hover:bg-gray-50'}`}
-                transition-all duration-200`}
+    const renderLanguageInfo = () => (
+      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-[#2d2d2d]' : 'bg-gray-50'}`}>
+        <div className="flex items-center">
+          {config ? (
+            <div className={`w-10 h-10 rounded-lg ${isDarkMode ? 'bg-[#1e1e1e]' : 'bg-white'} 
+              flex items-center justify-center mr-3 ${config.color}`}
             >
-              <FontAwesomeIcon icon={type.icon} className={`w-5 h-5 mr-3 
-                ${accessType === type.id ? 'text-blue-500' : 'text-gray-400'}`} 
-              />
-              <div className="flex-1">
-                <p className="font-medium">{type.label}</p>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {type.description}
-                </p>
-              </div>
+              <FontAwesomeIcon icon={config.icon} className="w-6 h-6" />
             </div>
-          ))}
+          ) : (
+            <div className={`w-10 h-10 rounded-lg ${isDarkMode ? 'bg-[#1e1e1e]' : 'bg-white'} 
+              flex items-center justify-center mr-3 text-gray-400 text-xs font-medium`}
+            >
+              {currentLanguage.substring(0, 2).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <p className="font-medium capitalize">
+              {currentLanguage === 'plaintext' ? 'Plain Text' : currentLanguage}
+            </p>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Current Language
+            </p>
+          </div>
         </div>
       </div>
+    );
 
-      {/* Danger Zone */}
-      <div className="space-y-3 pt-4 border-t dark:border-gray-700">
-        <h4 className="text-sm font-medium text-red-500">
-          Danger Zone
-        </h4>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            className={`flex-1 px-4 py-2.5 rounded-lg border-2 
-              ${isDarkMode 
-                ? 'border-yellow-500/20 text-yellow-500 hover:bg-yellow-500/10' 
-                : 'border-yellow-500/30 text-yellow-600 hover:bg-yellow-50'}
-              transition-colors`}
-          >
-            Archive Codespace
-          </button>
-          <button
-            className={`flex-1 px-4 py-2.5 rounded-lg border-2 
-              ${isDarkMode 
-                ? 'border-red-500/20 text-red-500 hover:bg-red-500/10' 
-                : 'border-red-500/30 text-red-600 hover:bg-red-50'}
-              transition-colors`}
-          >
-            Delete Codespace
-          </button>
+    return (
+      <div className="mt-6 space-y-6">
+        {/* Language Info - Added at the top */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-gray-400">
+            Language
+          </h4>
+          {renderLanguageInfo()}
+        </div>
+
+        {/* Rename Section */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-400">
+            Rename Codespace
+          </label>
+          <div className="mt-1">
+            <input
+              type="text"
+              value={newSlug}
+              onChange={(e) => setNewSlug(e.target.value)}
+              className={`block w-full rounded-lg border px-4 py-2.5
+                ${isDarkMode 
+                  ? 'bg-[#2d2d2d] border-gray-700 focus:border-blue-500' 
+                  : 'bg-white border-gray-300 focus:border-blue-500'}
+                focus:outline-none focus:ring-1 focus:ring-blue-500
+                transition-colors`}
+              placeholder="Enter new name"
+            />
+          </div>
+        </div>
+
+        {/* Access Type Section */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-400">
+            Access Type
+          </label>
+          <div className="space-y-2">
+            {accessTypes.map((type) => (
+              <div
+                key={type.id}
+                onClick={() => setAccessType(type.id)}
+                className={`flex items-center p-4 rounded-lg cursor-pointer
+                  ${accessType === type.id 
+                    ? isDarkMode 
+                      ? 'bg-blue-500/10 border-2 border-blue-500' 
+                      : 'bg-blue-50 border-2 border-blue-500'
+                    : `border-2 border-transparent 
+                       ${isDarkMode ? 'hover:bg-[#2d2d2d]' : 'hover:bg-gray-50'}`}
+                  transition-all duration-200`}
+              >
+                <FontAwesomeIcon icon={type.icon} className={`w-5 h-5 mr-3 
+                  ${accessType === type.id ? 'text-blue-500' : 'text-gray-400'}`} 
+                />
+                <div className="flex-1">
+                  <p className="font-medium">{type.label}</p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {type.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="space-y-3 pt-4 border-t dark:border-gray-700">
+          <h4 className="text-sm font-medium text-red-500">
+            Danger Zone
+          </h4>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              className={`flex-1 px-4 py-2.5 rounded-lg border-2 
+                ${isDarkMode 
+                  ? 'border-yellow-500/20 text-yellow-500 hover:bg-yellow-500/10' 
+                  : 'border-yellow-500/30 text-yellow-600 hover:bg-yellow-50'}
+                transition-colors`}
+            >
+              Archive Codespace
+            </button>
+            <button
+              className={`flex-1 px-4 py-2.5 rounded-lg border-2 
+                ${isDarkMode 
+                  ? 'border-red-500/20 text-red-500 hover:bg-red-500/10' 
+                  : 'border-red-500/30 text-red-600 hover:bg-red-50'}
+                transition-colors`}
+            >
+              Delete Codespace
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] overflow-y-auto">

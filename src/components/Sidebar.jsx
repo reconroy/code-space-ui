@@ -28,15 +28,22 @@ const Sidebar = ({ isOpen, onClose, isDarkMode }) => {
       <div 
         ref={sidebarRef}
         className={`fixed top-0 left-0 h-full w-64 
-          ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} 
-          shadow-lg shadow-r-lg flex flex-col
+          ${isDarkMode 
+            ? 'bg-gray-800 text-white border-r border-gray-700' 
+            : 'bg-gray-100 text-gray-800 border-r border-gray-200'} 
+          shadow-lg flex flex-col
           transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-          transition-transform duration-300 ease-in-out z-50`}
+          transition-all duration-300 ease-in-out z-50`}
       >
-        <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+        <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} 
+          flex justify-between items-center`}
+        >
           <h2 className="text-xl font-bold">Your CodeSpaces</h2>
           <button 
-            className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-600'} focus:outline-none`}
+            className={`${isDarkMode 
+              ? 'text-gray-300 hover:text-white' 
+              : 'text-gray-500 hover:text-gray-600'} 
+              focus:outline-none`}
             onClick={onClose}
           >
             <FaTimes className="h-5 w-5" />
@@ -47,7 +54,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode }) => {
           <CodespaceList />
         </div>
 
-        <div className="border-t dark:border-gray-700">
+        <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <UserProfile />
         </div>
       </div>
