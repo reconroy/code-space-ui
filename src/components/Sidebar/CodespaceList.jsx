@@ -15,51 +15,54 @@ const CodespaceList = () => {
     }
   };
 
-  // Separate default codespace from others
   const defaultCodespace = codespaces.find(cs => cs.is_default);
   const otherCodespaces = codespaces.filter(cs => !cs.is_default);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-4">
-      {/* Default Codespace */}
-      {defaultCodespace && (
-        <CodespaceCard 
-          codespace={defaultCodespace} 
-          isDefault={true}
-        />
-      )}
+    <div className="flex flex-col p-4 space-y-6">
+      {/* Default Workspace Section */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-medium text-gray-400 uppercase px-2">
+          DEFAULT CODESPACE
+        </h3>
+        {defaultCodespace && (
+          <CodespaceCard 
+            codespace={defaultCodespace} 
+            isDefault={true}
+          />
+        )}
+      </div>
 
       {/* New Codespace Button */}
       <button
         onClick={handleCreateCodespace}
-        className="w-full flex items-center justify-center p-2 mt-4 mb-2 
+        className="flex items-center justify-center p-3 
                  rounded-lg border-2 border-dashed 
-                 border-gray-400 dark:border-gray-600
-                 hover:border-blue-500 dark:hover:border-blue-400
-                 transition-colors duration-200"
+                 border-gray-600 hover:border-gray-400
+                 transition-colors duration-200 group
+                 text-gray-400 hover:text-gray-300"
       >
-        <FaPlus className="mr-2" />
+        <FaPlus className="mr-2 w-4 h-4" />
         <span>New Codespace</span>
       </button>
 
-      {/* Other Codespaces */}
-      <div className="mt-4">
-        {otherCodespaces.map(codespace => (
-          <CodespaceCard 
-            key={codespace.id} 
-            codespace={codespace}
-            isDefault={false}
-          />
-        ))}
-      </div>
+      {/* Other Workspaces Section */}
+      {otherCodespaces.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-gray-400 uppercase px-2">
+            YOUR WORKSPACES
+          </h3>
+          <div className="space-y-2">
+            {otherCodespaces.map(codespace => (
+              <CodespaceCard 
+                key={codespace.id} 
+                codespace={codespace}
+                isDefault={false}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
