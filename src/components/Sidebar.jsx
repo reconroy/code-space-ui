@@ -1,14 +1,19 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import CodespaceList from './Sidebar/CodespaceList';
 import UserProfile from '../user/UserProfile';
 import useCodespaceStore from '../store/useCodespaceStore';
 import useThemeStore from '../store/useThemeStore';
+import useAuthStore from '../store/useAuthStore';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const isDarkMode = useThemeStore(state => state.isDarkMode);
   const { fetchUserCodespaces } = useCodespaceStore();
   const sidebarRef = useRef(null);
+  const [codespaces, setCodespaces] = useState([]);
+  const socket = useWebSocket();
+  const user = useAuthStore(state => state.user);
 
   useEffect(() => {
     if (isOpen && localStorage.getItem('token')) {
@@ -26,6 +31,25 @@ const Sidebar = ({ isOpen, onClose }) => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    // Listen for codespace updates
+    socket.on('codespaceSettingsChanged', (updatedCodespace) => {
+      setCodespaces(prev => prev.map(cs => 
+        cs.id === updatedCodespace.id ? { ...cs, ...updatedCodespace } : cs
+      ));
+    });
+
+    // Listen for codespace deletions
+    socket.on('codespaceRemoved', (deletedSlug) => {
+      setCodespaces(prev => prev.filter(cs => cs.slug !== deletedSlug));
+    });
+
+    return () => {
+      socket.off('codespaceSettingsChanged');
+      socket.off('codespaceRemoved');
+    };
+  }, [socket]);
 
   return (
     <>
@@ -71,7 +95,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          <CodespaceList />
+          <CodespaceList codespaces={codespaces} />
         </div>
 
         {/* User Profile - Fixed at bottom */}

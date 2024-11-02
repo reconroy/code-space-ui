@@ -99,8 +99,8 @@ const useAuthStore = create((set) => ({
   },
 
   checkSession: () => {
-    const { sessionExpiry } = useAuthStore.getState();
-    if (!sessionExpiry) return;
+    const { sessionExpiry, user } = useAuthStore.getState();
+    if (!user || !sessionExpiry) return;
 
     const timeLeft = sessionExpiry - Date.now();
     
@@ -108,7 +108,8 @@ const useAuthStore = create((set) => ({
       set({ 
         showSessionWarning: false,
         showSessionExpired: true,
-        user: null 
+        user: null,
+        sessionExpiry: null
       });
       localStorage.removeItem('token');
     } 

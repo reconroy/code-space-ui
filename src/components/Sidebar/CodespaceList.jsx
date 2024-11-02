@@ -1,12 +1,37 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import CodespaceCard from './CodespaceCard';
 import useCodespaceStore from '../../store/useCodespaceStore';
 import { useNavigate } from 'react-router-dom';
+import { useWebSocket } from '../../contexts/WebSocketContext';
 
 const CodespaceList = () => {
-  const { codespaces, createNewCodespace, loading } = useCodespaceStore();
+  const { 
+    codespaces, 
+    createNewCodespace, 
+    loading,
+    updateCodespace,
+    deleteCodespace 
+  } = useCodespaceStore();
   const navigate = useNavigate();
+  const socket = useWebSocket();
+
+  useEffect(() => {
+    // Listen for codespace updates
+    socket.on('codespaceUpdated', (updatedCodespace) => {
+      updateCodespace(updatedCodespace);
+    });
+
+    // Listen for codespace deletions
+    socket.on('codespaceDeleted', (codespaceId) => {
+      deleteCodespace(codespaceId);
+    });
+
+    return () => {
+      socket.off('codespaceUpdated');
+      socket.off('codespaceDeleted');
+    };
+  }, [socket, updateCodespace, deleteCodespace]);
 
   const handleCreateCodespace = async () => {
     const newSlug = await createNewCodespace();
@@ -15,8 +40,10 @@ const CodespaceList = () => {
     }
   };
 
-  const defaultCodespace = codespaces.find(cs => cs.is_default);
-  const otherCodespaces = codespaces.filter(cs => !cs.is_default);
+  // Filter out archived codespaces
+  const activeCodespaces = codespaces.filter(cs => !cs.is_archived);
+  const defaultCodespace = activeCodespaces.find(cs => cs.is_default);
+  const otherCodespaces = activeCodespaces.filter(cs => !cs.is_default);
 
   return (
     <div className="flex flex-col p-4 space-y-6">

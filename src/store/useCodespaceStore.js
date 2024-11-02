@@ -51,6 +51,24 @@ const useCodespaceStore = create((set, get) => ({
       set({ error: error.message, loading: false });
       return null;
     }
+  },
+
+  updateCodespace: (updatedCodespace) => {
+    console.log('Updating codespace in store:', updatedCodespace);
+    set(state => ({
+      codespaces: state.codespaces.map(cs => 
+        cs.id === updatedCodespace.id 
+          ? { ...cs, ...updatedCodespace }
+          : cs
+      )
+    }));
+  },
+
+  deleteCodespace: (codespaceData) => {
+    console.log('Deleting codespace from store:', codespaceData);
+    set(state => ({
+      codespaces: state.codespaces.filter(cs => cs.id !== codespaceData.id)
+    }));
   }
 }));
 

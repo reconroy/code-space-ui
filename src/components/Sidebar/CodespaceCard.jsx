@@ -69,30 +69,16 @@ const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
     }
   };
 
-  const getAccessIcon = () => {
-    let iconClass = "w-3.5 h-3.5";
-    
-    if (!isDarkMode) {
-      if (isDefault) {
-        iconClass += " text-emerald-500";
-      } else if (codespace.access_type === 'shared') {
-        iconClass += " text-yellow-500";
-      } else {
-        iconClass += " text-rose-500";
-      }
-    } else {
-      iconClass += " text-white";
-    }
-    
-    switch (codespace.access_type) {
+  const getAccessIcon = (accessType) => {
+    switch (accessType) {
       case 'private':
-        return <FaLock className={iconClass} />;
+        return <FaLock className="text-red-500" />;
       case 'public':
-        return <FaGlobe className={iconClass} />;
+        return <FaGlobe className="text-green-500" />;
       case 'shared':
-        return <FaUsers className={iconClass} />;
+        return <FaUsers className="text-blue-500" />;
       default:
-        return null;
+        return <FaLock className="text-red-500" />;
     }
   };
 
@@ -128,7 +114,7 @@ const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
           
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <div className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-md ${getIconContainerStyle()}`}>
-              {getAccessIcon()}
+              {getAccessIcon(codespace.access_type)}
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-white font-medium truncate">
