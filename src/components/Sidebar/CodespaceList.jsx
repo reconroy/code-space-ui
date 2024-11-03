@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import CodespaceCard from './CodespaceCard';
 import useCodespaceStore from '../../store/useCodespaceStore';
@@ -11,15 +11,23 @@ const CodespaceList = () => {
     createNewCodespace, 
     loading,
     updateCodespace,
-    deleteCodespace 
+    deleteCodespace,
+    fetchUserCodespaces
   } = useCodespaceStore();
   const navigate = useNavigate();
   const socket = useWebSocket();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     // Listen for codespace updates
-    socket.on('codespaceUpdated', (updatedCodespace) => {
+    socket.on('codespaceSettingsChanged', async (updatedCodespace) => {
+      console.log('Received settings update:', updatedCodespace);
+      // First update the store
       updateCodespace(updatedCodespace);
+      // Then refresh the component
+      setRefreshKey(prev => prev + 1);
+      // Optionally refetch the full list
+      await fetchUserCodespaces();
     });
 
     // Listen for codespace deletions
@@ -28,10 +36,10 @@ const CodespaceList = () => {
     });
 
     return () => {
-      socket.off('codespaceUpdated');
+      socket.off('codespaceSettingsChanged');
       socket.off('codespaceDeleted');
     };
-  }, [socket, updateCodespace, deleteCodespace]);
+  }, [socket, updateCodespace, deleteCodespace, fetchUserCodespaces]);
 
   const handleCreateCodespace = async () => {
     const newSlug = await createNewCodespace();
@@ -46,7 +54,7 @@ const CodespaceList = () => {
   const otherCodespaces = activeCodespaces.filter(cs => !cs.is_default);
 
   return (
-    <div className="flex flex-col p-4 space-y-6">
+    <div className="flex flex-col p-4 space-y-6" key={refreshKey}>
       {/* Default Workspace Section */}
       <div className="space-y-2">
         <h3 className="text-xs font-medium text-gray-400 uppercase px-2">
@@ -54,6 +62,7 @@ const CodespaceList = () => {
         </h3>
         {defaultCodespace && (
           <CodespaceCard 
+            key={`${defaultCodespace.id}-${defaultCodespace.access_type}-${refreshKey}`}
             codespace={defaultCodespace} 
             isDefault={true}
           />
@@ -82,7 +91,7 @@ const CodespaceList = () => {
           <div className="space-y-2">
             {otherCodespaces.map(codespace => (
               <CodespaceCard 
-                key={codespace.id} 
+                key={`${codespace.id}-${codespace.access_type}-${refreshKey}`}
                 codespace={codespace}
                 isDefault={false}
               />
