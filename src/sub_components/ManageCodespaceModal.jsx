@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import { useNavigate } from 'react-router-dom';
+import AccessLogsSection from './AccessLogsSection';
 
 const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
   const isDarkMode = useThemeStore(state => state.isDarkMode);
@@ -347,6 +348,8 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
                   {isLoading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
+
+              {formData.accessType === 'shared' && <AccessLogsSection codespace={codespace} />}
             </form>
           )}
         </div>
