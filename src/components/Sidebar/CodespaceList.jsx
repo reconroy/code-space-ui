@@ -31,13 +31,18 @@ const CodespaceList = () => {
     });
 
     // Listen for codespace deletions
-    socket.on('codespaceDeleted', (codespaceId) => {
-      deleteCodespace(codespaceId);
+    socket.on('codespaceRemoved', async (codespaceData) => {
+      console.log('Received codespace deletion:', codespaceData);
+      deleteCodespace(codespaceData);
+      // Refresh the component
+      setRefreshKey(prev => prev + 1);
+      // Optionally refetch the full list
+      await fetchUserCodespaces();
     });
 
     return () => {
       socket.off('codespaceSettingsChanged');
-      socket.off('codespaceDeleted');
+      socket.off('codespaceRemoved');
     };
   }, [socket, updateCodespace, deleteCodespace, fetchUserCodespaces]);
 
