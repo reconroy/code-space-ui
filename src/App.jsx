@@ -9,75 +9,89 @@ import Login from './user/Login';
 import Registration from './user/Registration';
 import ForgotPassword from './user/ForgotPassword';
 import ChangePassword from './user/ChangePassword';
+import Settings from './user/Settings';
 import GuestRoute from './routes/GuestRoute';
 import ProtectedRoute from './routes/ProtectedRoute';
 import HomeRoute from './routes/HomeRoute';
 import './styles/selectionStyles.css';
 import './App.css';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Homepage with route guard */}
-        <Route path="/" element={
-          <HomeRoute>
-            <Layout>
-              <HomePage />
-            </Layout>
-          </HomeRoute>
-        } />
+    <WebSocketProvider>
+      <Router>
+        <Routes>
+          {/* Homepage with route guard */}
+          <Route path="/" element={
+            <HomeRoute>
+              <Layout>
+                <HomePage />
+              </Layout>
+            </HomeRoute>
+          } />
 
-        {/* Guest-only routes */}
-        <Route path="/login" element={
-          <GuestRoute>
-            <Layout>
-              <Login />
-            </Layout>
-          </GuestRoute>
-        } />
-        <Route path="/register" element={
-          <GuestRoute>
-            <Layout>
-              <Registration />
-            </Layout>
-          </GuestRoute>
-        } />
-        <Route path="/forgot-password" element={
-          <GuestRoute>
-            <Layout>
-              <ForgotPassword />
-            </Layout>
-          </GuestRoute>
-        } />
+          {/* Guest-only routes */}
+          <Route path="/login" element={
+            <GuestRoute>
+              <Layout>
+                <Login />
+              </Layout>
+            </GuestRoute>
+          } />
+          <Route path="/register" element={
+            <GuestRoute>
+              <Layout>
+                <Registration />
+              </Layout>
+            </GuestRoute>
+          } />
+          <Route path="/forgot-password" element={
+            <GuestRoute>
+              <Layout>
+                <ForgotPassword />
+              </Layout>
+            </GuestRoute>
+          } />
 
-        {/* Protected routes */}
-        <Route path="/diff-checker" element={
-          <ProtectedRoute>
+          {/* Protected routes */}
+          <Route path="/diff-checker" element={
+            <ProtectedRoute>
+              <Layout>
+                <DiffChecker />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/change-password" element={
+            <ProtectedRoute>
+              <Layout>
+                <ChangePassword />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          {/* Protected Settings Route */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Settings />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          {/* Dynamic codespace route */}
+          <Route path="/:slug" element={
             <Layout>
-              <DiffChecker />
+              <CodespacePage />
             </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/change-password" element={
-          <ProtectedRoute>
-            <Layout>
-              <ChangePassword />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Dynamic codespace route */}
-        <Route path="/:slug" element={
-          <Layout>
-            <CodespacePage />
-          </Layout>
-        } />
+          } />
 
-        {/* Catch-all route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          {/* Catch-all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </WebSocketProvider>
   );
 }
 

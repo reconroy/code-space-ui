@@ -40,17 +40,42 @@ const useCodespaceStore = create((set, get) => ({
         }
       );
       
+      const newCodespace = {
+        ...response.data.data,
+        access_type: 'private',
+        slug: randomSlug,
+        is_archived: false
+      };
+      
       set(state => ({
-        codespaces: [...state.codespaces, response.data.data],
+        codespaces: [...state.codespaces, newCodespace],
         loading: false
       }));
 
-      return response.data.data.slug;
+      return newCodespace.slug;
     } catch (error) {
       console.error('Error creating codespace:', error);
       set({ error: error.message, loading: false });
       return null;
     }
+  },
+
+  updateCodespace: (updatedCodespace) => {
+    console.log('Updating codespace in store:', updatedCodespace);
+    set(state => ({
+      codespaces: state.codespaces.map(cs => 
+        cs.id === updatedCodespace.id 
+          ? { ...cs, ...updatedCodespace }
+          : cs
+      )
+    }));
+  },
+
+  deleteCodespace: (codespaceData) => {
+    console.log('Deleting codespace from store:', codespaceData);
+    set(state => ({
+      codespaces: state.codespaces.filter(cs => cs.id !== codespaceData.id)
+    }));
   }
 }));
 

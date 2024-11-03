@@ -142,17 +142,8 @@ const Navbar = () => {
         // Check initial state
         handleFullscreenChange();
 
-        // Restore fullscreen if it was active before refresh
-        const restoreFullscreen = async () => {
-            if (isFullscreen && !isBrowserFullscreen()) {
-                try {
-                    await document.documentElement.requestFullscreen();
-                } catch (err) {
-                    console.error('Error restoring fullscreen:', err);
-                }
-            }
-        };
-        restoreFullscreen();
+        // Remove automatic fullscreen restoration
+        // Only allow fullscreen through user interaction
 
         return () => {
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -161,7 +152,7 @@ const Navbar = () => {
             document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isFullscreen, setFullscreen]);
+    }, [setFullscreen]);
 
     return (
         <>

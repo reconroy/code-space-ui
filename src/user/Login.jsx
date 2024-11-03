@@ -22,10 +22,19 @@ const handleSubmit = async (e) => {
   setError('');
 
   try {
-    const loginResponse = await axios.post(`${API_URL}/api/auth/login`, { // Add /auth to the path
-      emailOrUsername, 
-      password 
-    });
+    const loginResponse = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/auth/login`, 
+      { 
+        emailOrUsername, 
+        password 
+      },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
     if (loginResponse.data.status === 'success' && loginResponse.data.token) {
       localStorage.setItem('token', loginResponse.data.token);
@@ -98,7 +107,7 @@ const handleSubmit = async (e) => {
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck="false"
-              autoFill="off"
+              autofill="off"
               onPaste={(e) => e.preventDefault()}
               onDrop={(e) => e.preventDefault()}
             />
@@ -120,7 +129,7 @@ const handleSubmit = async (e) => {
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck="false"
-                autoFill="off"
+                autofill="off"
                 onPaste={(e) => e.preventDefault()}
                 onDrop={(e) => e.preventDefault()}
               />
