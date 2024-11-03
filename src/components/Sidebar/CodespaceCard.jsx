@@ -8,8 +8,9 @@ import {
   FaPencilAlt, 
   FaArchive, 
   FaShareAlt, 
-  FaTrash 
+  FaTrash
 } from 'react-icons/fa';
+import { IoShieldCheckmark } from "react-icons/io5";
 import ManageCodespaceModal from './../../sub_components/ManageCodespaceModal';
 
 const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
@@ -59,26 +60,30 @@ const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
     
     switch (codespace.access_type) {
       case 'private':
-        return `${baseStyle} bg-rose-500 hover:bg-rose-600`;
+        return `${baseStyle} bg-blue-500 hover:bg-blue-600`;
       case 'public':
         return `${baseStyle} bg-rose-500 hover:bg-rose-600`;
       case 'shared':
         return `${baseStyle} bg-yellow-500 hover:bg-yellow-600`;
       default:
-        return `${baseStyle} bg-rose-500 hover:bg-rose-600`;
+        return `${baseStyle} bg-blue-500 hover:bg-blue-600`;
     }
   };
 
-  const getAccessIcon = (accessType) => {
+  const getAccessIcon = (accessType, isDefault) => {
+    if (isDefault) {
+      return <IoShieldCheckmark className="text-emerald-500 w-5 h-5" />;
+    }
+
     switch (accessType) {
       case 'private':
-        return <FaLock className="text-red-500" />;
+        return <FaLock className="text-blue-500" />;
       case 'public':
-        return <FaGlobe className="text-green-500" />;
+        return <FaGlobe className="text-rose-500" />;
       case 'shared':
-        return <FaUsers className="text-blue-500" />;
+        return <FaUsers className="text-yellow-500" />;
       default:
-        return <FaLock className="text-red-500" />;
+        return <FaLock className="text-blue-500" />;
     }
   };
 
@@ -114,7 +119,7 @@ const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
           
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <div className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-md ${getIconContainerStyle()}`}>
-              {getAccessIcon(codespace.access_type)}
+              {getAccessIcon(codespace.access_type, isDefault)}
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-white font-medium truncate">
@@ -122,7 +127,7 @@ const CodespaceCard = ({ codespace, isDefault, isDarkMode }) => {
               </span>
               {isDefault && (
                 <span className="text-xs text-white/80 truncate">
-                  Default Workspace
+                  Default Codespace
                 </span>
               )}
             </div>

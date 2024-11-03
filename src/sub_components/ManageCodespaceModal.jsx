@@ -81,6 +81,48 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
     }
   };
 
+  const renderDefaultCodespaceContent = () => (
+    <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium mb-2">Codespace Name</label>
+          <div className={`w-full rounded-lg border p-2.5 ${isDarkMode ? 'bg-[#2d2d2d] border-gray-700' : 'bg-white border-gray-300'}`}>
+            {codespace.slug}
+          </div>
+        </div>
+      <div>
+        <label className="block text-sm font-medium mb-2">Language</label>
+        <div className={`w-full rounded-lg border p-2.5 ${isDarkMode ? 'bg-[#2d2d2d] border-gray-700' : 'bg-white border-gray-300'}`}>
+          {codespace.language || 'Plain Text'}
+        </div>
+      </div>
+
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Type</label>
+        <div className={`w-full rounded-lg border p-2.5 ${isDarkMode ? 'bg-[#2d2d2d] border-gray-700' : 'bg-white border-gray-300'}`}>
+          Default Codespace
+        </div>
+      </div>
+
+      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-[#2d2d2d]' : 'bg-gray-100'}`}>
+        <p className="text-sm">
+          This is your default codespace. It serves as your primary workspace and cannot be modified or deleted. 
+          It's automatically created when you first sign up and remains accessible at all times.
+        </p>
+      </div>
+
+      <div className="flex justify-end pt-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className={`px-4 py-2 rounded-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+
   if (!isOpen) return null;
 
   return createPortal(
@@ -91,117 +133,123 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
         <div className={`relative w-full max-w-lg rounded-xl ${isDarkMode ? 'bg-[#1e1e1e] text-white' : 'bg-white'} p-6`}>
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold">Manage Codespace</h3>
+            <h3 className="text-xl font-semibold">
+              {codespace.is_default ? 'Default Codespace Info' : 'Manage Codespace'}
+            </h3>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
               <FontAwesomeIcon icon={faTimes} />
             </button>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Input */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Codespace Name</label>
-              <input
-                type="text"
-                name="newSlug"
-                value={formData.newSlug}
-                onChange={handleInputChange}
-                className={`w-full rounded-lg border p-2.5 ${isDarkMode ? 'bg-[#2d2d2d] border-gray-700' : 'bg-white border-gray-300'}`}
-              />
-            </div>
-
-            {/* Access Type */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Access Type</label>
-              <div className="space-y-2">
-                {[
-                  { id: 'private', icon: faLock, label: 'Private' },
-                  { id: 'public', icon: faGlobe, label: 'Public' },
-                  { id: 'shared', icon: faUsers, label: 'Shared' }
-                ].map(type => (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, accessType: type.id }))}
-                    className={`w-full p-3 rounded-lg border flex items-center gap-3 
-                      ${formData.accessType === type.id 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' 
-                        : 'border-gray-200 dark:border-gray-700'}`}
-                  >
-                    <FontAwesomeIcon icon={type.icon} />
-                    <span>{type.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Passkey (only for shared access) */}
-            {formData.accessType === 'shared' && (
+          {/* Content */}
+          {codespace.is_default ? renderDefaultCodespaceContent() : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Name Input */}
               <div>
-                <label className="block text-sm font-medium mb-2">Passkey</label>
+                <label className="block text-sm font-medium mb-2">Codespace Name</label>
                 <input
                   type="text"
-                  name="passkey"
-                  value={formData.passkey}
+                  name="newSlug"
+                  value={formData.newSlug}
                   onChange={handleInputChange}
-                  maxLength={6}
-                  placeholder="Enter 6-digit passkey"
                   className={`w-full rounded-lg border p-2.5 ${isDarkMode ? 'bg-[#2d2d2d] border-gray-700' : 'bg-white border-gray-300'}`}
                 />
               </div>
-            )}
 
-            {/* Archive Option */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="archive"
-                checked={formData.isArchived}
-                onChange={(e) => setFormData(prev => ({ ...prev, isArchived: e.target.checked }))}
-                className="rounded border-gray-300"
-              />
-              <label htmlFor="archive">Archive this codespace</label>
-            </div>
+              {/* Access Type */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Access Type</label>
+                <div className="space-y-2">
+                  {[
+                    { id: 'private', icon: faLock, label: 'Private' },
+                    { id: 'public', icon: faGlobe, label: 'Public' },
+                    { id: 'shared', icon: faUsers, label: 'Shared' }
+                  ].map(type => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, accessType: type.id }))}
+                      className={`w-full p-3 rounded-lg border flex items-center gap-3 
+                        ${formData.accessType === type.id 
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' 
+                          : 'border-gray-200 dark:border-gray-700'}`}
+                    >
+                      <FontAwesomeIcon icon={type.icon} />
+                      <span>{type.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Delete Confirmation */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-6">
-              <button
-                type="button"
-                onClick={() => setShowDeleteModal(true)}
-                className="text-red-500 hover:text-red-600 font-medium"
-              >
-                Delete this codespace
-              </button>
-            </div>
+              {/* Passkey (only for shared access) */}
+              {formData.accessType === 'shared' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Passkey</label>
+                  <input
+                    type="text"
+                    name="passkey"
+                    value={formData.passkey}
+                    onChange={handleInputChange}
+                    maxLength={6}
+                    placeholder="Enter 6-digit passkey"
+                    className={`w-full rounded-lg border p-2.5 ${isDarkMode ? 'bg-[#2d2d2d] border-gray-700' : 'bg-white border-gray-300'}`}
+                  />
+                </div>
+              )}
 
-            {/* Form Buttons */}
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className={`px-4 py-2 rounded-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
-              >
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
+              {/* Archive Option */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="archive"
+                  checked={formData.isArchived}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isArchived: e.target.checked }))}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="archive">Archive this codespace</label>
+              </div>
+
+              {/* Delete Confirmation */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="text-red-500 hover:text-red-600 font-medium"
+                >
+                  Delete this codespace
+                </button>
+              </div>
+
+              {/* Form Buttons */}
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className={`px-4 py-2 rounded-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+                >
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
 
-      <DeleteConfirmationModal 
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        codespace={codespace}
-        onModalClose={onClose}
-      />
+      {!codespace.is_default && (
+        <DeleteConfirmationModal 
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          codespace={codespace}
+          onModalClose={onClose}
+        />
+      )}
     </div>,
     document.getElementById('modal-root')
   );
