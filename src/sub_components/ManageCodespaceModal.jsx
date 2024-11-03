@@ -21,6 +21,7 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const socket = useWebSocket();
   const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (isOpen && codespace) {
@@ -35,14 +36,46 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name === 'passkey') {
+      const alphanumericValue = value.replace(/[^a-zA-Z0-9]/g, '');
+      const truncatedValue = alphanumericValue.slice(0, 6);
+      setFormData(prev => ({
+        ...prev,
+        [name]: truncatedValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (formData.accessType === 'shared') {
+      if (!formData.passkey) {
+        newErrors.passkey = 'Passkey is required for shared access';
+      } else if (formData.passkey.length !== 6) {
+        newErrors.passkey = 'Passkey must be exactly 6 characters';
+      } else if (!/^[a-zA-Z0-9]{6}$/.test(formData.passkey)) {
+        newErrors.passkey = 'Passkey must contain only letters and numbers';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -66,7 +99,6 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
           }
         });
 
-        // If slug changed, update the URL
         if (settings.newSlug) {
           navigate(`/${settings.newSlug}`, { replace: true });
         }
@@ -120,6 +152,41 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
           Close
         </button>
       </div>
+    </div>
+  );
+
+  const renderPasskeyInput = () => (
+    <div>
+      <label className="block text-sm font-medium mb-2">
+        Passkey
+        <span className="text-xs text-gray-500 ml-2">
+          (6 characters, letters and numbers only)
+        </span>
+      </label>
+      <input
+        type="text"
+        name="passkey"
+        value={formData.passkey}
+        onChange={handleInputChange}
+        minLength={6}
+        maxLength={6}
+        pattern="[A-Za-z0-9]{6}"
+        placeholder="Enter 6-digit passkey"
+        className={`w-full rounded-lg border p-2.5 
+          ${isDarkMode ? 'bg-[#2d2d2d]' : 'bg-white'} 
+          ${errors.passkey 
+            ? 'border-red-500 focus:border-red-500' 
+            : 'border-gray-300 dark:border-gray-700'
+          }`}
+      />
+      {errors.passkey && (
+        <p className="mt-1 text-sm text-red-500">
+          {errors.passkey}
+        </p>
+      )}
+      <p className="mt-1 text-xs text-gray-500">
+        Example: ABC123, 12AB34, etc.
+      </p>
     </div>
   );
 
@@ -182,20 +249,7 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
               </div>
 
               {/* Passkey (only for shared access) */}
-              {formData.accessType === 'shared' && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Passkey</label>
-                  <input
-                    type="text"
-                    name="passkey"
-                    value={formData.passkey}
-                    onChange={handleInputChange}
-                    maxLength={6}
-                    placeholder="Enter 6-digit passkey"
-                    className={`w-full rounded-lg border p-2.5 ${isDarkMode ? 'bg-[#2d2d2d] border-gray-700' : 'bg-white border-gray-300'}`}
-                  />
-                </div>
-              )}
+              {formData.accessType === 'shared' && renderPasskeyInput()}
 
               {/* Archive Option */}
               <div className="flex items-center gap-2">
@@ -231,8 +285,9 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+                  disabled={isLoading || (formData.accessType === 'shared' && !formData.passkey)}
+                  className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 
+                           disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Saving...' : 'Save Changes'}
                 </button>
