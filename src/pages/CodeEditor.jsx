@@ -26,9 +26,11 @@ import kotlin from 'highlight.js/lib/languages/kotlin';
 import scala from 'highlight.js/lib/languages/scala'; 
 import php from 'highlight.js/lib/languages/php';
 import sql from 'highlight.js/lib/languages/sql';
+import react from 'highlight.js/lib/languages/xml';
+import angular from 'highlight.js/lib/languages/typescript';
 
 // Register languages with highlight.js
-const languages = { javascript, python, css, java, cpp, xml, json, markdown, csharp, typescript, ruby, go, rust, swift, kotlin, scala, php, sql };
+const languages = { javascript, python, css, java, cpp, xml, json, markdown, csharp, typescript, ruby, go, rust, swift, kotlin, scala, php, sql, react, angular };
 Object.entries(languages).forEach(([name, lang]) => hljs.registerLanguage(name, lang));
 
 const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuthenticated }) => {
@@ -46,10 +48,10 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
       editorRef.current.updateOptions({ 
         theme: isDarkMode ? 'vs-dark' : 'light',
         fontSize: fontSize,
-        minimap: { enabled: isAuthenticated && isMinimapEnabled }
+        minimap: { enabled: isAuthenticated ? isMinimapEnabled : false }
       });
     }
-  }, [isDarkMode, fontSize, isAuthenticated, isMinimapEnabled]);
+  }, [isDarkMode, fontSize, isMinimapEnabled, isAuthenticated]);
 
   const detectLanguage = (content) => {
     if (!isAuthenticated || !isLanguageDetectionEnabled) {
@@ -97,7 +99,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
     editor.updateOptions({ 
       theme: isDarkMode ? 'vs-dark' : 'light',
       fontSize: fontSize,
-      minimap: { enabled: isAuthenticated && isMinimapEnabled }
+      minimap: { enabled: isAuthenticated ? isMinimapEnabled : false }
     });
 
     editor.onDidChangeCursorSelection((e) => {
@@ -181,7 +183,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
           scrollBeyondLastLine: false,
           automaticLayout: true,
           wordWrap: 'on',
-          minimap: { enabled: isAuthenticated && isMinimapEnabled },
+          minimap: { enabled: isAuthenticated ? isMinimapEnabled : false },
           suggestOnTriggerCharacters: true,
           quickSuggestions: true, 
           autoClosingBrackets: 'always',

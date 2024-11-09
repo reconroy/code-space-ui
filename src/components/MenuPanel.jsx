@@ -32,7 +32,7 @@ const languageExtensions = {
   sql: 'sql'
 };
 
-const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection, isAuthenticated }) => {
+const MenuPanel = ({ code, language, onToggleLanguageDetection, isAuthenticated }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const { showFontSizeSlider, toggleFontSizeSlider } = useFontSizeStore();
   const [copySuccess, setCopySuccess] = useState(false);
