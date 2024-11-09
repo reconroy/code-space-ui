@@ -46,10 +46,10 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
       editorRef.current.updateOptions({ 
         theme: isDarkMode ? 'vs-dark' : 'light',
         fontSize: fontSize,
-        minimap: { enabled: isMinimapEnabled }
+        minimap: { enabled: isAuthenticated && isMinimapEnabled }
       });
     }
-  }, [isDarkMode, fontSize, isMinimapEnabled]);
+  }, [isDarkMode, fontSize, isAuthenticated, isMinimapEnabled]);
 
   const detectLanguage = (content) => {
     if (!isAuthenticated || !isLanguageDetectionEnabled) {
@@ -97,7 +97,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
     editor.updateOptions({ 
       theme: isDarkMode ? 'vs-dark' : 'light',
       fontSize: fontSize,
-      minimap: { enabled: isMinimapEnabled }
+      minimap: { enabled: isAuthenticated && isMinimapEnabled }
     });
 
     editor.onDidChangeCursorSelection((e) => {
@@ -181,7 +181,7 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
           scrollBeyondLastLine: false,
           automaticLayout: true,
           wordWrap: 'on',
-          minimap: { enabled: isMinimapEnabled },
+          minimap: { enabled: isAuthenticated && isMinimapEnabled },
           suggestOnTriggerCharacters: true,
           quickSuggestions: true, 
           autoClosingBrackets: 'always',

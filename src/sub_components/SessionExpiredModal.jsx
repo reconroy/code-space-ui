@@ -1,11 +1,25 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useThemeStore from '../store/useThemeStore';
+import useAuthStore from '../store/useAuthStore';
 import { FaExclamationTriangle } from 'react-icons/fa';
 
 const SessionExpiredModal = () => {
   const isDarkMode = useThemeStore(state => state.isDarkMode);
   const navigate = useNavigate();
+  const { setShowSessionExpired, setSessionExpiry } = useAuthStore();
+
+  const handleNavigation = (path) => {
+    // Clear local storage
+    localStorage.removeItem('token');
+    
+    // Reset auth states
+    setShowSessionExpired(false);
+    setSessionExpiry(null);
+    
+    // Navigate to the specified path
+    navigate(path);
+  };
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black bg-opacity-50">
@@ -27,7 +41,7 @@ const SessionExpiredModal = () => {
 
         <div className="flex justify-center space-x-4">
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => handleNavigation('/login')}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
                      transition-colors duration-200"
           >
@@ -35,7 +49,7 @@ const SessionExpiredModal = () => {
           </button>
           
           <button
-            onClick={() => navigate('/')}
+            onClick={() => handleNavigation('/')}
             className={`px-6 py-2 rounded-lg border transition-colors duration-200
               ${isDarkMode 
                 ? 'border-gray-600 hover:bg-gray-700' 
