@@ -32,7 +32,7 @@ const languageExtensions = {
   sql: 'sql'
 };
 
-const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection }) => {
+const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection, isAuthenticated }) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const { showFontSizeSlider, toggleFontSizeSlider } = useFontSizeStore();
   const [copySuccess, setCopySuccess] = useState(false);
@@ -142,19 +142,21 @@ const MenuPanel = ({ code, language, onToggleMinimap, onToggleLanguageDetection 
               </div>
             )}
           </div>
-          <button
-            onClick={toggleMinimap}
-            className={`p-3 mb-4 rounded-full md:rounded hover:bg-opacity-75 transition-transform transform hover:scale-110 
-            ${isMinimapEnabled 
-              ? 'bg-blue-500 text-white' 
-              : isDarkMode 
-                ? 'bg-gray-700 text-white' 
-                : 'bg-gray-300 text-black'}`}
-            aria-label="Toggle Minimap"
-            title={isMinimapEnabled ? "Disable Minimap" : "Enable Minimap"}
-          >
-            <FaMap className="text-xl md:text-2xl" />
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={toggleMinimap}
+              className={`p-3 mb-4 rounded-full md:rounded hover:bg-opacity-75 transition-transform transform hover:scale-110 
+              ${isMinimapEnabled 
+                ? 'bg-blue-500 text-white' 
+                : isDarkMode 
+                  ? 'bg-gray-700 text-white' 
+                  : 'bg-gray-300 text-black'}`}
+              aria-label="Toggle Minimap"
+              title={isMinimapEnabled ? "Disable Minimap" : "Enable Minimap"}
+            >
+              <FaMap className="text-xl md:text-2xl" />
+            </button>
+          )}
           <button
             onClick={handleNewRandomCodespace}
             className={`p-3 mb-4 rounded-full md:rounded hover:bg-opacity-75 transition-transform transform hover:scale-110 
