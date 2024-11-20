@@ -94,7 +94,8 @@ const MenuPanel = ({ code, language, onToggleLanguageDetection, isAuthenticated 
       <div className={`w-16 md:w-20 h-full py-2 px-1 md:px-2 shadow-lg flex  flex-col items-center
       ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'}`}>
         <div className="flex-grow flex flex-col items-center z-50">
-          <button
+          {/* Run Button */}
+          {/* <button
             onClick={handleRunCode}
             className={`p-3 mb-4 rounded-full md:rounded hover:bg-opacity-75 transition-all transform hover:scale-110 
           ${isDarkMode ? 'bg-gradient-to-r from-green-600 to-green-700' : 'bg-gradient-to-r from-green-400 to-green-500'} 
@@ -106,7 +107,7 @@ const MenuPanel = ({ code, language, onToggleLanguageDetection, isAuthenticated 
               <FaPlay className="text-xl md:text-2xl" />
               <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
             </div>
-          </button>
+          </button> */}
           <button
             onClick={handleDownload}
             className={`p-3 mb-4 rounded-full md:rounded hover:bg-opacity-75 transition-transform transform hover:scale-110 

@@ -11,7 +11,7 @@ const Footer = () => {
         <div className="flex flex-row justify-between items-center">
           {/* Copyright text - Responsive text size and spacing */}
           <p className="text-xs sm:text-sm md:text-base">
-            &copy; 2024 Codespaces | All rights reserved.
+            &copy; 2024 CodeSpaces | All rights reserved.
           </p>
 
           {/* Version tag */}
@@ -30,34 +30,3 @@ const Footer = () => {
 
 export default Footer;        
   
-{/* <nav className="order-2 w-full sm:w-auto">
-            <ul className="flex flex-wrap justify-center sm:justify-end gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm md:text-base">
-              <li>
-                <a 
-                  href="#" 
-                  className={`${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-500 hover:text-blue-600'} 
-                    transition-colors duration-300 py-1 px-2 rounded hover:bg-opacity-10 hover:bg-blue-500`}
-                >
-                  Terms
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#" 
-                  className={`${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-500 hover:text-blue-600'} 
-                    transition-colors duration-300 py-1 px-2 rounded hover:bg-opacity-10 hover:bg-blue-500`}
-                >
-                  Privacy
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#" 
-                  className={`${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-500 hover:text-blue-600'} 
-                    transition-colors duration-300 py-1 px-2 rounded hover:bg-opacity-10 hover:bg-blue-500`}
-                >
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </nav> */}
