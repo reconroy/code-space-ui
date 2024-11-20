@@ -11,7 +11,7 @@ const Footer = () => {
         <div className="flex flex-row justify-between items-center">
           {/* Copyright text - Responsive text size and spacing */}
           <p className="text-xs sm:text-sm md:text-base">
-            &copy; 2024 CUPL | All rights reserved.
+            &copy; 2024 Codespaces | All rights reserved.
           </p>
 
           {/* Version tag */}
