@@ -186,7 +186,7 @@ const Navbar = () => {
                                 onClick={handleLogoClick}
                                 className="text-xl sm:text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity duration-200"
                             >
-                                CodeSpace
+                                CodeSpaces
                             </a>
                         </div>
 
