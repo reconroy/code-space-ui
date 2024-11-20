@@ -125,6 +125,7 @@ const LogoutModal = ({ isOpen, onClose }) => {
               }`}
             >
               {selectedMessage.confirmButton}
+              {/* (Logout) */}
             </button>
             <button
               onClick={onClose}
