@@ -5,6 +5,7 @@ import useThemeStore from '.././store/useThemeStore';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useFullscreenStore from '../store/useFullscreenStore';
+import Notification from './Notification';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -31,7 +32,7 @@ const Navbar = () => {
                 });
 
                 setIsAuthenticated(response.data.valid);
-                
+
                 if (!response.data.valid) {
                     localStorage.removeItem('token');
                 }
@@ -51,7 +52,7 @@ const Navbar = () => {
 
     const handleLogoClick = async (e) => {
         e.preventDefault();
-        
+
         if (!isAuthenticated) {
             navigate('/');
             return;
@@ -159,7 +160,7 @@ const Navbar = () => {
             <nav className={`${isDarkMode ? 'bg-gray-800 text-white border-b border-gray-700' : 'bg-gray-100 text-gray-800 shadow-lg shadow-gray-400/50 shadow-b-lg border-b border-gray-200'} transition-colors duration-300`}>
                 <div className="container mx-auto">
                     <div className="h-16 flex items-center">
-                        {/* Left section - Menu Button or Home Button */}   
+                        {/* Left section - Menu Button or Home Button */}
                         <div className="w-16 sm:w-[180px] md:w-[240px] flex items-center pl-4 sm:pl-6">
                             {isAuthenticated ? (
                                 <button
@@ -180,8 +181,8 @@ const Navbar = () => {
 
                         {/* Center section - Logo */}
                         <div className="flex-1 flex justify-center">
-                            <a 
-                                href="#" 
+                            <a
+                                href="#"
                                 onClick={handleLogoClick}
                                 className="text-xl sm:text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity duration-200"
                             >
@@ -192,22 +193,6 @@ const Navbar = () => {
                         {/* Right section - Theme Toggle */}
                         <div className="w-16 sm:w-[180px] md:w-[240px] flex justify-end pr-4 sm:pr-6">
                             <div className="hidden sm:flex items-center space-x-3">
-                                {/* Fullscreen Toggle */}
-                                <button
-                                    onClick={handleFullscreen}
-                                    className={`focus:outline-none transition-colors duration-200 p-1 rounded-lg
-                                        ${isDarkMode 
-                                            ? 'hover:bg-gray-700 text-gray-300 hover:text-white' 
-                                            : 'hover:bg-gray-200 text-gray-600 hover:text-gray-800'}`}
-                                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-                                >
-                                    {isBrowserFullscreen() ? (
-                                        <FaCompress className="h-4 w-4 sm:h-5 sm:w-5" />
-                                    ) : (
-                                        <FaExpand className="h-4 w-4 sm:h-5 sm:w-5" />
-                                    )}
-                                </button>
-
                                 {/* Existing Theme Toggle */}
                                 <FaSun className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode ? 'text-gray-500' : 'text-yellow-500'}`} />
                                 <label className="switch relative inline-block w-12 sm:w-14 h-6 sm:h-7">
@@ -217,7 +202,7 @@ const Navbar = () => {
                                         checked={isDarkMode}
                                         onChange={toggleDarkMode}
                                     />
-                                    <span 
+                                    <span
                                         className={`
                                             slider absolute cursor-pointer inset-0
                                             ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}
@@ -231,6 +216,28 @@ const Navbar = () => {
                                     ></span>
                                 </label>
                                 <FaMoon className={`h-4 w-4 sm:h-5 sm:w-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+                                {/* Fullscreen Toggle */}
+                                <button
+                                    onClick={handleFullscreen}
+                                    className={`focus:outline-none  transition-colors duration-200 p-1 rounded-lg
+                                        ${isDarkMode
+                                            ? 'hover:bg-gray-700 text-gray-300 hover:text-white'
+                                            : 'hover:bg-gray-200 text-gray-600 hover:text-gray-800'}`}
+                                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                                >
+                                    {isBrowserFullscreen() ? (
+                                        <FaCompress className="h-4 w-4 sm:h-5 sm:w-5" />
+                                    ) : (
+                                        <FaExpand className="h-4 w-4 sm:h-5 sm:w-5" />
+                                    )}
+                                </button>
+
+                                {/* Notification Component - Medium screens and up */}
+                                {isAuthenticated && (
+                                    <div className="hidden md:block">
+                                        <Notification isDarkMode={isDarkMode} />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Mobile Theme Toggle */}

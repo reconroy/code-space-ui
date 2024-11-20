@@ -434,7 +434,6 @@ const CodespacePage = () => {
             setLanguage={handleLanguageChange}
             socket={socket}
             slug={slug}
-            minimapEnabled={minimapEnabled}
             isAuthenticated={isAuthenticated}
           />
         </div>
@@ -444,10 +443,10 @@ const CodespacePage = () => {
               code={code}
               language={language}
               onLanguageChange={handleLanguageChange}
-              onToggleMinimap={handleToggleMinimap}
               onToggleLanguageDetection={handleToggleLanguageDetection}
               isLanguageDetectionEnabled={isLanguageDetectionEnabled}
               createCodespace={createCodespace}
+              isAuthenticated={isAuthenticated}
             />
           </div>
         )}
