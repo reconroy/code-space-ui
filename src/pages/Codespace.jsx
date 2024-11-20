@@ -148,7 +148,7 @@ const CodespacePage = () => {
     }
 
     try {
-      const response = await axios.get('/api/auth/verify', {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/verify`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -209,7 +209,7 @@ const CodespacePage = () => {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-      const response = await axios.post('/api/codespace',
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/codespace`,
         { slug: newSlug || slug },
         { headers }
       );
@@ -314,7 +314,7 @@ const CodespacePage = () => {
         return;
       }
   
-      await axios.put(`/api/codespace/${slug}`,
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/codespace/${slug}`,
         { content: codeToSave, language: langToSave },
         { headers }
       );
