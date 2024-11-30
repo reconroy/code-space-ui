@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import CodespaceCard from './CodespaceCard';
 import useCodespaceStore from '../../store/useCodespaceStore';
@@ -18,27 +18,33 @@ const CodespaceList = () => {
   const socket = useWebSocket();
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Filter and sort codespaces
+  const sortedCodespaces = useMemo(() => {
+    const activeCodespaces = codespaces.filter(cs => !cs.is_archived);
+    const defaultCodespace = activeCodespaces.find(cs => cs.is_default);
+    const otherCodespaces = activeCodespaces
+      .filter(cs => !cs.is_default)
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+    return {
+      defaultCodespace,
+      otherCodespaces
+    };
+  }, [codespaces]);
+
   useEffect(() => {
     socket.on('codespaceSettingsChanged', async (updatedCodespace) => {
-      console.log('Received settings update:', updatedCodespace);
       if (updatedCodespace && updatedCodespace.id) {
         updateCodespace(updatedCodespace);
-        setRefreshKey(prev => prev + 1);
-      }
-    });
-
-    socket.on('codespaceRemoved', async (codespaceData) => {
-      if (codespaceData && codespaceData.id) {
-        deleteCodespace(codespaceData);
+        await fetchUserCodespaces(); // Fetch fresh data to get updated timestamps
         setRefreshKey(prev => prev + 1);
       }
     });
 
     return () => {
       socket.off('codespaceSettingsChanged');
-      socket.off('codespaceRemoved');
     };
-  }, [socket, updateCodespace, deleteCodespace]);
+  }, [socket, updateCodespace, fetchUserCodespaces]);
 
   const handleCreateCodespace = async () => {
     const newSlug = await createNewCodespace();
@@ -47,11 +53,6 @@ const CodespaceList = () => {
     }
   };
 
-  // Filter out archived codespaces
-  const activeCodespaces = codespaces.filter(cs => !cs.is_archived);
-  const defaultCodespace = activeCodespaces.find(cs => cs.is_default);
-  const otherCodespaces = activeCodespaces.filter(cs => !cs.is_default);
-
   return (
     <div className="flex flex-col p-4 space-y-6" key={refreshKey}>
       {/* Default Workspace Section */}
@@ -59,10 +60,10 @@ const CodespaceList = () => {
         <h3 className="text-xs font-medium text-gray-400 uppercase px-2">
           DEFAULT CODESPACE
         </h3>
-        {defaultCodespace && (
+        {sortedCodespaces.defaultCodespace && (
           <CodespaceCard 
-            key={`${defaultCodespace.id}-${defaultCodespace.access_type}-${refreshKey}`}
-            codespace={defaultCodespace} 
+            key={`${sortedCodespaces.defaultCodespace.id}-${refreshKey}`}
+            codespace={sortedCodespaces.defaultCodespace} 
             isDefault={true}
           />
         )}
@@ -82,15 +83,15 @@ const CodespaceList = () => {
       </button>
 
       {/* Other Workspaces Section */}
-      {otherCodespaces.length > 0 && (
+      {sortedCodespaces.otherCodespaces.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-xs font-medium text-gray-400 uppercase px-2">
             YOUR WORKSPACES
           </h3>
           <div className="space-y-2">
-            {otherCodespaces.map(codespace => (
+            {sortedCodespaces.otherCodespaces.map(codespace => (
               <CodespaceCard 
-                key={`${codespace.id}-${codespace.access_type}-${refreshKey}`}
+                key={`${codespace.id}-${refreshKey}`}
                 codespace={codespace}
                 isDefault={false}
               />

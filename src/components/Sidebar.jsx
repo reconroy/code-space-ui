@@ -19,7 +19,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     if (isOpen && localStorage.getItem('token')) {
       fetchUserCodespaces();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchUserCodespaces]);
 
   useEffect(() => {
     if (isOpen) {
