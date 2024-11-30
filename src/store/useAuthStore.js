@@ -41,7 +41,10 @@ const useAuthStore = create((set) => ({
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
-        const expiryTime = Date.now() + SESSION_DURATION;
+        const expiryTime = response.data.expiresIn === 'never' 
+          ? null 
+          : Date.now() + parseDuration(response.data.expiresIn);
+        
         set({ 
           user: response.data.user,
           isLoading: false,
@@ -100,7 +103,8 @@ const useAuthStore = create((set) => ({
 
   checkSession: () => {
     const { sessionExpiry, user } = useAuthStore.getState();
-    if (!user || !sessionExpiry) return;
+    if (!user) return;
+    if (sessionExpiry === null) return;
 
     const timeLeft = sessionExpiry - Date.now();
     
