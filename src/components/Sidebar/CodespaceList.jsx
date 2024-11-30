@@ -19,32 +19,26 @@ const CodespaceList = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    // Listen for codespace updates
     socket.on('codespaceSettingsChanged', async (updatedCodespace) => {
       console.log('Received settings update:', updatedCodespace);
-      // First update the store
-      updateCodespace(updatedCodespace);
-      // Then refresh the component
-      setRefreshKey(prev => prev + 1);
-      // Optionally refetch the full list
-      await fetchUserCodespaces();
+      if (updatedCodespace && updatedCodespace.id) {
+        updateCodespace(updatedCodespace);
+        setRefreshKey(prev => prev + 1);
+      }
     });
 
-    // Listen for codespace deletions
     socket.on('codespaceRemoved', async (codespaceData) => {
-      console.log('Received codespace deletion:', codespaceData);
-      deleteCodespace(codespaceData);
-      // Refresh the component
-      setRefreshKey(prev => prev + 1);
-      // Optionally refetch the full list
-      await fetchUserCodespaces();
+      if (codespaceData && codespaceData.id) {
+        deleteCodespace(codespaceData);
+        setRefreshKey(prev => prev + 1);
+      }
     });
 
     return () => {
       socket.off('codespaceSettingsChanged');
       socket.off('codespaceRemoved');
     };
-  }, [socket, updateCodespace, deleteCodespace, fetchUserCodespaces]);
+  }, [socket, updateCodespace, deleteCodespace]);
 
   const handleCreateCodespace = async () => {
     const newSlug = await createNewCodespace();
