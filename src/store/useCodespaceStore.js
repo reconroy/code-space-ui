@@ -63,11 +63,12 @@ const useCodespaceStore = create((set, get) => ({
   updateCodespace: (updatedCodespace) => {
     console.log('Updating codespace in store:', updatedCodespace);
     set(state => ({
-      codespaces: state.codespaces.map(cs => 
-        cs.id === updatedCodespace.id 
-          ? { ...cs, ...updatedCodespace }
-          : cs
-      )
+      codespaces: state.codespaces.map(cs => {
+        if (cs.id === updatedCodespace.id && cs.slug === updatedCodespace.slug) {
+          return { ...cs, ...updatedCodespace };
+        }
+        return cs;
+      })
     }));
   },
 

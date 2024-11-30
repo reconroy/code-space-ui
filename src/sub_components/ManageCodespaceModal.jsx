@@ -21,7 +21,6 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
     isArchived: false
   });
   const [errors, setErrors] = useState({});
-  const [isValid, setIsValid] = useState(false);
   const socket = useWebSocket();
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -39,24 +38,6 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
       setErrors({});
     }
   }, [isOpen, codespace]);
-
-  // Validate form whenever formData changes
-  useEffect(() => {
-    const newErrors = {};
-    
-    if (!formData.newSlug.trim()) {
-      newErrors.newSlug = 'Name is required';
-    }
-    
-    if (formData.accessType === 'shared' && 
-        (!codespace.passkey || isUpdatingPasskey) && 
-        (!formData.passkey || formData.passkey.length !== 6)) {
-      newErrors.passkey = 'Passkey must be exactly 6 characters';
-    }
-    
-    setErrors(newErrors);
-    setIsValid(Object.keys(newErrors).length === 0);
-  }, [formData, isUpdatingPasskey, codespace.passkey]);
 
   // Check if any changes were made
   const hasChanges = () => {
@@ -84,9 +65,29 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.newSlug.trim()) {
+      newErrors.newSlug = 'Name is required';
+    }
+    
+    if (formData.accessType === 'shared' && 
+        (!codespace.passkey || isUpdatingPasskey) && 
+        (!formData.passkey || formData.passkey.length !== 6)) {
+      newErrors.passkey = 'Passkey must be exactly 6 characters';
+    }
+    
+    return newErrors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isValid) return;
+    
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+    
+    if (Object.keys(validationErrors).length > 0) return;
 
     setIsLoading(true);
     try {
@@ -203,29 +204,31 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
         </div>
 
         {(isNewSharedAccess || isUpdatingPasskey) ? (
-          <div className="relative">
-            <FontAwesomeIcon 
-              icon={faKey} 
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              name="passkey"
-              value={formData.passkey}
-              onChange={(e) => {
-                const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-                if (value.length <= 6) {
-                  setFormData(prev => ({ ...prev, passkey: value }));
-                }
-              }}
-              placeholder="Enter 6-character passkey"
-              maxLength={6}
-              className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                isDarkMode 
-                  ? 'bg-[#2d2d2d] border-gray-700' 
-                  : 'bg-white border-gray-300'
-              } ${errors.passkey ? 'border-red-500' : ''}`}
-            />
+          <div>
+            <div className="relative flex items-center">
+              <FontAwesomeIcon 
+                icon={faKey} 
+                className="absolute left-3 text-gray-400 pointer-events-none"
+              />
+              <input
+                type="text"
+                name="passkey"
+                value={formData.passkey}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                  if (value.length <= 6) {
+                    setFormData(prev => ({ ...prev, passkey: value }));
+                  }
+                }}
+                placeholder="Enter 6-character passkey"
+                maxLength={6}
+                className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
+                  isDarkMode 
+                    ? 'bg-[#2d2d2d] border-gray-700' 
+                    : 'bg-white border-gray-300'
+                } ${errors.passkey ? 'border-red-500' : ''}`}
+              />
+            </div>
             {errors.passkey && (
               <p className="mt-1 text-sm text-red-500">{errors.passkey}</p>
             )}
@@ -341,7 +344,7 @@ const ManageCodespaceModal = ({ isOpen, onClose, codespace }) => {
                 </button>
                 <button
                   type="submit"
-                  disabled={!hasChanges() || !isValid || isLoading}
+                  disabled={!hasChanges() || isLoading}
                   className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 
                            disabled:opacity-50 disabled:cursor-not-allowed"
                 >

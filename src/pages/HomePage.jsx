@@ -11,15 +11,15 @@ const HomePage = () => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const [codespaceId, setCodespaceId] = useState('');
   const [error, setError] = useState('');
-  // const [userCount, setUserCount] = useState(0);//not used for now
+  const [userCount, setUserCount] = useState(0);//not used for now
 
   const phrases = [
-    "Welcome to CodeSpace ",
-    "An AI code editor",
+    "Welcome to CodeSpaces ",
     "Share code safely", 
+    "End-to-end encrypted",
     "Collaborate in real-time",
     "Keep your code private",
-    // `${userCount}+ users on CodeSpace!`,
+    `${userCount} users on CodeSpaces!`,
     "Enjoy the simplicity",
     "Focus on coding !",
   ];
@@ -79,26 +79,18 @@ const HomePage = () => {
     }
   };
 
-  // Function to round number to nearest multiple of 5
-  // const roundToNearest5 = (num) => {
-  //   return Math.floor(num / 5) * 5 || 5; // Return at least 5
-  // };
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/count`);
+        setUserCount(response.data.count);
+      } catch (error) {
+        console.error('Failed to fetch user count:', error);
+      }
+    };
 
-  // Fetch user count on component mount
-  // useEffect(() => {
-  //   const fetchUserCount = async () => {
-  //     try {
-  //       const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/count`);
-  //       const count = response.data.count;
-  //       setUserCount(roundToNearest5(count));
-  //     } catch (error) {
-  //       console.error('Failed to fetch user count:', error);
-  //       setUserCount(5); // Fallback to 5 if fetch fails
-  //     }
-  //   };
-
-  //   fetchUserCount();
-  // }, []);
+    fetchUserCount();
+  }, []);
 
   return (
     <div 
