@@ -10,6 +10,7 @@ import AccessDenied from '../components/AccessDenied';
 import LogoutModal from '../sub_components/LogoutModal';
 import useLanguageDetectionStore from '../store/useLanguageDetectionStore';
 import hljs from 'highlight.js/lib/core';
+import { jwtDecode } from 'jwt-decode';
 
 // Import languages for highlight.js detection
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -65,6 +66,8 @@ const CodespacePage = () => {
   const [ownerUsername, setOwnerUsername] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isLanguageDetectionEnabled, toggleLanguageDetection } = useLanguageDetectionStore();
+  const [showPasskeyModal, setShowPasskeyModal] = useState(false);
+  const [isSharedCodespace, setIsSharedCodespace] = useState(false);
 
   useEffect(() => {
     let isBackButtonClicked = false;
@@ -167,107 +170,109 @@ const CodespacePage = () => {
     }
   }, []);
 
+  const createCodespace = useCallback(async (newSlug) => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/codespace`,
+        { slug: newSlug || slug },
+        { headers }
+      );
+
+      if (response.data.status === 'success') {
+        const newCodespace = response.data.data;
+        setCodespace(newCodespace);
+        setCode(newCodespace.content || '');
+        setLanguage(newCodespace.language || 'plaintext');
+        setError(null);
+      }
+    } catch (error) {
+      console.error('Error creating codespace:', error);
+      setError('Failed to create codespace');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [slug]);
+
   const fetchCodespace = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/codespace/${slug}`, { headers });
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/codespace/${slug}`, 
+        { headers }
+      );
       
       if (response.data.status === 'success') {
-        setCodespace(response.data.data);
-        setCode(response.data.data.content || '');
-        setLanguage(response.data.data.language || 'plaintext');
+        const codespaceData = response.data.data;
+        setCodespace(codespaceData);
+        setCode(codespaceData.content || '');
+        setLanguage(codespaceData.language || 'plaintext');
+        setIsAccessDenied(false);
         
-        if (response.data.data.access_type === 'private' && !token) {
-          setIsAccessDenied(true);
-          setOwnerUsername(response.data.data.owner_username);
-          return;
+        // Handle shared codespace access
+        if (codespaceData.access_type === 'shared') {
+          if (token) {
+            const decoded = jwtDecode(token);
+            const currentUserId = decoded.id;
+            
+            // Owner should always have access
+            if (parseInt(codespaceData.owner_id) === parseInt(currentUserId)) {
+              return;
+            }
+            
+            // For non-owners, check access
+            if (!response.data.hasAccess) {
+              setShowPasskeyModal(true);
+              return;
+            }
+          } else {
+            setShowPasskeyModal(true);
+            return;
+          }
         }
+        
+        setError(null);
       }
-  
-      setError(null);
     } catch (error) {
       console.error('Error fetching codespace:', error);
       if (error.response?.status === 401 || error.response?.status === 403) {
-        setIsAccessDenied(true);
-        setOwnerUsername(error.response.data.owner);
-        if (error.response?.status === 401) {
-          localStorage.removeItem('token');
+        const token = localStorage.getItem('token');
+        if (token) {
+          const decoded = jwtDecode(token);
+          const currentUserId = decoded.id;
+          
+          // Don't show access denied for owner
+          if (parseInt(error.response.data.ownerId) === parseInt(currentUserId)) {
+            return;
+          }
         }
+        
+        if (error.response.data.requiresPasskey) {
+          setShowPasskeyModal(true);
+        } else {
+          setIsAccessDenied(true);
+          setOwnerUsername(error.response.data.owner);
+        }
+      } else if (error.response?.status === 404) {
+        await createCodespace();
       } else {
         setError('Failed to fetch codespace');
       }
     } finally {
       setIsLoading(false);
     }
-  }, [slug]);
+  }, [slug, createCodespace]);
 
-  const createCodespace = async (newSlug) => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/codespace`,
-        { slug: newSlug || slug },
-        { headers }
-      );
-
-      if (response.data.status === 'success') {
-        if (newSlug) {
-          navigate(`/${newSlug}`);
-        } else {
-          await fetchCodespace();
-        }
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error creating codespace:', error);
-      setError(error.response?.data?.message || 'Failed to create codespace');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Initialize codespace when component mounts
   useEffect(() => {
-    const initializeCodespace = async () => {
-      if (!slug) return;
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/codespace/${slug}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.data.status === 'success') {
-          setCodespace(response.data.data);
-          setCode(response.data.data.content || '');
-          setLanguage(response.data.data.language || 'javascript');
-          setIsAccessDenied(false);
-        }
-      } catch (error) {
-        console.error('Error fetching codespace:', error);
-        if (error.response?.status === 403) {
-          setIsAccessDenied(true);
-          setOwnerUsername(error.response.data.owner);
-        } else if (error.response?.status === 404) {
-          await createCodespace();
-        } else {
-          setError('Failed to load codespace');
-          setIsLoading(false);
-        }
-      }
-    };
-
-    initializeCodespace();
-  }, [slug]);
+    if (!slug) return;
+    fetchCodespace();
+  }, [slug, fetchCodespace]);
 
   useEffect(() => {
     const apiUrl = import.meta.env.VITE_API_URL;
@@ -435,6 +440,7 @@ const CodespacePage = () => {
             socket={socket}
             slug={slug}
             isAuthenticated={isAuthenticated}
+            codespace={codespace}
           />
         </div>
         {isAuthenticated && (
@@ -468,6 +474,17 @@ const CodespacePage = () => {
           window.history.pushState(null, '', location.pathname);
         }}
       />
+      {showPasskeyModal && (
+        <PasskeyModal
+          isOpen={showPasskeyModal}
+          onClose={() => setShowPasskeyModal(false)}
+          codespace={codespace}
+          onAccessGranted={() => {
+            setShowPasskeyModal(false);
+            fetchCodespace();
+          }}
+        />
+      )}
     </>
   );
 };

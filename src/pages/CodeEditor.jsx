@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Monaco from '@monaco-editor/react';
 import hljs from 'highlight.js/lib/core';
 import 'highlight.js/styles/github.css';
@@ -6,6 +6,7 @@ import useThemeStore from '../store/useThemeStore';
 import useFontSizeStore from '../store/useFontSizeStore';
 import useLanguageDetectionStore from '../store/useLanguageDetectionStore';
 import useMinimapStore from '../store/useMinimapStore';
+import { jwtDecode } from 'jwt-decode';
 
 // Import languages for highlight.js detection
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -33,7 +34,16 @@ import angular from 'highlight.js/lib/languages/typescript';
 const languages = { javascript, python, css, java, cpp, xml, json, markdown, csharp, typescript, ruby, go, rust, swift, kotlin, scala, php, sql, react, angular };
 Object.entries(languages).forEach(([name, lang]) => hljs.registerLanguage(name, lang));
 
-const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuthenticated }) => {
+const CodeEditor = ({ 
+  code, 
+  setCode, 
+  language, 
+  setLanguage, 
+  socket, 
+  slug, 
+  isAuthenticated,
+  codespace
+}) => {
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const editorRef = useRef(null);
   const { fontSize } = useFontSizeStore();
@@ -42,6 +52,39 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
     (state) => state.isLanguageDetectionEnabled
   );
   const { isMinimapEnabled } = useMinimapStore();
+
+  const getCurrentUserId = useCallback(() => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const decoded = jwtDecode(token);
+        return decoded.id;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  }, []);
+
+  const canEdit = useCallback(() => {
+    if (!codespace) return false;
+    if (!isAuthenticated) return false;
+    
+    const currentUserId = getCurrentUserId();
+    if (!currentUserId) return false;
+
+    // Owner can always edit
+    if (parseInt(codespace.owner_id) === parseInt(currentUserId)) return true;
+    
+    // For shared codespaces, anyone with access can edit
+    if (codespace.access_type === 'shared' && codespace.hasAccess) return true;
+    
+    // For public codespaces, any authenticated user can edit
+    if (codespace.access_type === 'public') return true;
+    
+    return false;
+  }, [codespace, isAuthenticated]);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -75,8 +118,10 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
   };
 
   const handleEditorChange = (value) => {
+    if (!canEdit()) return;
+    
     setCode(value);
-    if (value && value.length > 10) {
+    if (value && value.length > 10 && isLanguageDetectionEnabled) {
       const detectedLang = detectLanguage(value);
       if (detectedLang !== language) {
         console.log('Changing language from', language, 'to', detectedLang);
@@ -189,7 +234,8 @@ const CodeEditor = ({ code, setCode, language, setLanguage, socket, slug, isAuth
           autoClosingBrackets: 'always',
           autoIndent: 'full',
           formatOnType: true,
-          formatOnPaste: true
+          formatOnPaste: true,
+          readOnly: !canEdit()
         }}
       />
     </div>
